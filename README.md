@@ -1,6 +1,6 @@
-# Language Learning Hub
+# Online Language Learning System
 
-A comprehensive Django web application for language learning powered by OCR (Optical Character Recognition) and TTS (Text-to-Speech) technology. This platform provides user authentication, personalized learning experiences, and progress tracking for effective language learning.
+A comprehensive Django web application for language learning powered by **OCR (Optical Character Recognition)**, **TTS (Text-to-Speech)**, **Translation**, and **Dictionary Lookup** technology. This platform provides multilingual support (English, Chinese, Malay), user authentication, personalized learning experiences, and comprehensive progress tracking for effective language learning.
 
 ## 🎯 Features
 
@@ -11,36 +11,42 @@ A comprehensive Django web application for language learning powered by OCR (Opt
 - **Progress Tracking**: Detailed learning statistics and achievements
 
 ### 🧠 AI-Powered Learning
-- **Smart OCR**: Extract text from handwritten or printed images using TrOCR technology
-- **Natural TTS**: Convert text to speech with multiple voice options
-- **Multi-language Support**: Learn various languages with native pronunciation
-- **Difficulty Levels**: Adaptive content based on user proficiency
+- **Smart OCR**: Extract text from handwritten or printed images using custom-trained TrOCR models
+- **High-Quality TTS**: Convert text to speech with SpeechT5 + HiFi-GAN vocoder
+- **Voice Options**: Male/female voice selection with CMU Arctic speaker embeddings
+- **Multilingual Translation**: English ↔ Chinese ↔ Malay using M2M100 model
+- **Dictionary Lookup**: Automatic word definitions with Free Dictionary API + NLTK WordNet fallback
+- **Audio Quality**: Fixed 0.5x speed for optimal clarity and volume enhancement
 
 ### 📊 Learning Management
 - **Personal Dashboard**: Overview of learning progress and recent activities
 - **Session History**: Track all learning sessions with detailed metadata
-- **Favorites**: Save and organize preferred learning materials
+- **Export Learning Notes**: Generate comprehensive .txt files with OCR text, definitions, and translations
 - **Statistics**: Comprehensive analytics on learning patterns and progress
+- **Single Word Detection**: Automatic dictionary lookup for individual words
 
 ## 🛠️ Current Status
 
-**✅ Completed:**
-- Full-featured Django web application with PostgreSQL support
-- User authentication system (registration, login, logout, password reset)
-- Personal user dashboards with learning statistics
-- Enhanced database models for user profiles and learning history
-- Responsive Bootstrap UI with modern design
-- Session management and progress tracking
-- Administrative interface for content management
-- Security features (CSRF protection, user permissions)
-- Multi-language support infrastructure
+**✅ Fully Completed:**
+- **Complete Django web application** with SQLite database
+- **User authentication system** (registration, login, logout, password reset)
+- **OCR Pipeline Integration** - Custom TrOCR models with automatic fallback
+- **TTS Pipeline Integration** - SpeechT5 + HiFi-GAN with voice options
+- **Translation Service** - M2M100 multilingual translation
+- **Dictionary Lookup** - Online API + offline NLTK WordNet fallback
+- **Export Learning Notes** - Comprehensive .txt file generation
+- **Personal user dashboards** with learning statistics
+- **Enhanced database models** for user profiles and learning history
+- **Responsive Bootstrap UI** with modern design and custom confirmations
+- **Session management** and progress tracking
+- **Administrative interface** for content management
+- **Security features** (CSRF protection, user permissions)
+- **Multilingual support** (English, Chinese, Malay)
+- **Audio file management** and playback controls
+- **Copy to clipboard** functionality for text and definitions
+- **Error handling** and fallback mechanisms
 
-**⏳ Pending (After Model Training):**
-- OCR pipeline integration (TrOCR model)
-- TTS pipeline integration (TTS model)
-- Audio generation and processing
-- Advanced learning analytics
-- Vocabulary management features
+**🎯 System Ready for Production Use!**
 
 ## 📦 Installation
 
@@ -71,18 +77,10 @@ A comprehensive Django web application for language learning powered by OCR (Opt
    pip install -r requirements.txt
    ```
 
-4. **Set up PostgreSQL (Optional):**
-   - Install PostgreSQL on your system
-   - Create a database named `language_learning_db`
-   - Set environment variables or update `settings.py`:
-     ```bash
-     export DB_NAME=language_learning_db
-     export DB_USER=postgres
-     export DB_PASSWORD=your_password
-     export DB_HOST=localhost
-     export DB_PORT=5432
-     ```
-   - The app will fallback to SQLite if PostgreSQL is not available
+4. **Database Setup:**
+   - The application uses **SQLite** by default (no additional setup required)
+   - Database file will be created automatically as `db.sqlite3`
+   - For production, you can easily switch to PostgreSQL or MySQL by updating `settings.py`
 
 5. **Run database migrations:**
    ```bash
@@ -112,9 +110,10 @@ A comprehensive Django web application for language learning powered by OCR (Opt
 
 ### Authenticated User URLs
 - **Dashboard**: `http://127.0.0.1:8000/dashboard/` - Personal learning dashboard
-- **Upload**: `http://127.0.0.1:8000/upload/` - Image upload for OCR
-- **Text to Speech**: `http://127.0.0.1:8000/text-to-speech/` - Direct text input
-- **Session History**: `http://127.0.0.1:8000/sessions/` - View learning history
+- **Upload**: `http://127.0.0.1:8000/upload/` - Image upload for OCR processing
+- **Text to Speech**: `http://127.0.0.1:8000/text-to-speech/` - Direct text input with voice options
+- **Translation**: `http://127.0.0.1:8000/translate/` - Dedicated translation interface
+- **Session History**: `http://127.0.0.1:8000/sessions/` - View learning history and statistics
 - **Profile**: `http://127.0.0.1:8000/auth/profile/` - User profile management
 
 ### Admin URLs
@@ -125,23 +124,29 @@ A comprehensive Django web application for language learning powered by OCR (Opt
 ```
 OnlineLangLearnSystem/
 ├── language_app/          # Main Django project
-│   ├── settings.py       # Project settings
+│   ├── settings.py       # Project settings (SQLite database)
 │   ├── urls.py          # Main URL configuration
 │   └── ...
+├── accounts/             # User authentication app
+│   ├── models.py        # User and UserProfile models
+│   ├── views.py         # Registration, login, profile views
+│   ├── forms.py         # Custom forms with validation
+│   └── signals.py       # Auto-create UserProfile on registration
 ├── ocr_tts_app/          # Main application
-│   ├── models.py        # Database models
-│   ├── views.py         # View functions
-│   ├── forms.py         # Form definitions
+│   ├── models.py        # LearningHistory, Statistics models
+│   ├── views.py         # OCR, TTS, translation, export views
 │   ├── urls.py          # App URL patterns
-│   └── templates/       # HTML templates
-├── src/                  # OCR & TTS pipelines (to be integrated)
-│   ├── ocr_pipeline.py  # TrOCR implementation
-│   └── tts/
-│       └── tts_pipeline.py  # TTS implementation
+│   └── templates/       # HTML templates with Bootstrap 5
+├── src/                  # Core AI services
+│   └── ocr_pipeline.py  # TrOCR model loading and text extraction
+├── services/             # External service integrations
+│   ├── tts_service.py   # SpeechT5 TTS with voice options
+│   ├── translation_service.py  # M2M100 translation pipeline
+│   └── dictionary_service.py   # Dictionary lookup with caching
 ├── static/               # CSS, JS, images
 ├── media/                # User uploads and generated files
-│   ├── images/          # Uploaded images
-│   └── audio/           # Generated audio files
+│   ├── uploads/         # Uploaded images
+│   └── tts/             # Generated audio files
 ├── requirements.txt      # Python dependencies
 └── README.md            # This file
 ```
@@ -151,66 +156,98 @@ OnlineLangLearnSystem/
 ### Settings
 Key configuration options in `language_app/settings.py`:
 
+- **Database**: SQLite (default) - automatically creates `db.sqlite3`
 - **Media Files**: Configured for file uploads and audio generation
-- **Static Files**: Bootstrap and custom CSS/JS
-- **Database**: SQLite (default) - easily changeable for production
+- **Static Files**: Bootstrap 5 and custom CSS/JS
 - **File Upload Limits**: 10MB max file size
+- **Supported Languages**: English, Chinese, Malay
+- **Default Target Language**: English
 
-### Model Integration (After Training)
-To integrate your trained models:
+### AI Model Integration
+The system includes fully integrated AI models:
 
-1. **OCR Integration**:
-   - Uncomment OCR imports in `ocr_tts_app/views.py`
-   - Update `src/ocr_pipeline.py` with your trained TrOCR model
-   - Uncomment OCR processing methods
+1. **OCR Pipeline** (`src/ocr_pipeline.py`):
+   - Custom TrOCR models: `trocr_iiit5k_word/`, `my_ocr_model/`
+   - Automatic fallback to Microsoft TrOCR
+   - Numeric output detection and retry mechanism
 
-2. **TTS Integration**:
-   - Uncomment TTS imports in `ocr_tts_app/views.py`
-   - Update `src/tts/tts_pipeline.py` with your trained TTS model
-   - Uncomment TTS processing methods
+2. **TTS Service** (`services/tts_service.py`):
+   - SpeechT5 + HiFi-GAN vocoder
+   - CMU Arctic speaker embeddings for voice variety
+   - Fixed 0.5x speed for optimal clarity
+
+3. **Translation Service** (`services/translation_service.py`):
+   - M2M100 multilingual model
+   - English ↔ Chinese ↔ Malay support
+
+4. **Dictionary Service** (`services/dictionary_service.py`):
+   - Free Dictionary API (online)
+   - NLTK WordNet (offline fallback)
+   - LRU caching for performance
 
 ## 🎨 User Interface
 
 The application features a modern, responsive design with:
 
 - **Bootstrap 5**: Professional styling and components
-- **Interactive Forms**: Image preview, character counters
-- **Status Indicators**: Real-time processing status
-- **Audio Players**: Built-in HTML5 audio controls
+- **Interactive Forms**: Image preview, character counters, voice selection
+- **Status Indicators**: Real-time processing status with progress bars
+- **Audio Players**: Built-in HTML5 audio controls with play/pause
+- **Custom Modals**: Confirmation dialogs for important actions
+- **Copy to Clipboard**: One-click copying of text and definitions
+- **Export Functionality**: Download learning notes as .txt files
 - **Responsive Design**: Works on desktop and mobile devices
 
-## 🔄 Workflow
+## 🔄 Complete Learning Workflow
 
-1. **Image Upload**: Users upload images containing text
-2. **OCR Processing**: Extract text using TrOCR model (pending integration)
-3. **TTS Processing**: Convert text to speech audio (pending integration)
-4. **Results Display**: Show extracted text and audio player
-5. **History Tracking**: Save and display processing sessions
+1. **Image Upload**: Users upload images containing text (PNG, JPG, JPEG)
+2. **OCR Processing**: Extract text using custom TrOCR models with automatic fallback
+3. **Dictionary Lookup**: If single word detected, automatically fetch definitions
+4. **TTS Processing**: Convert text to speech with high-quality audio generation
+5. **Translation**: Optional translation to other supported languages
+6. **Results Display**: Show extracted text, definitions, audio player, and translations
+7. **Export Learning Notes**: Generate comprehensive .txt files for offline study
+8. **History Tracking**: Save and display all processing sessions with statistics
 
 ## 🧪 Testing
 
-Currently available for testing:
-- Web interface functionality
-- File upload handling
-- Database operations
-- Template rendering
-- URL routing
-
-After model integration:
-- OCR accuracy testing
-- TTS quality evaluation
-- End-to-end workflow testing
+**Fully Tested and Working:**
+- ✅ Web interface functionality
+- ✅ File upload handling and validation
+- ✅ Database operations (SQLite)
+- ✅ Template rendering and responsive design
+- ✅ URL routing and navigation
+- ✅ OCR accuracy with custom models
+- ✅ TTS quality with SpeechT5 + HiFi-GAN
+- ✅ Translation accuracy (English ↔ Chinese ↔ Malay)
+- ✅ Dictionary lookup functionality
+- ✅ Export learning notes feature
+- ✅ End-to-end workflow testing
+- ✅ Error handling and fallback mechanisms
 
 ## 📊 Database Schema
 
-### OCRTTSSession Model
+### LearningHistory Model
 - `session_id`: Unique identifier (UUID)
+- `user`: Foreign key to User model
 - `uploaded_image`: Image file field
 - `extracted_text`: OCR results
-- `audio_file_path`: Generated audio file
+- `audio_url`: Generated audio file URL
+- `audio_filename`: Audio file name
+- `word_count`: Number of words extracted
+- `is_single_word`: Boolean flag for dictionary lookup
+- `word_definitions`: JSON field for dictionary results
+- `dictionary_status`: Dictionary lookup status
 - `ocr_status`: Processing status (pending/processing/completed/failed)
 - `tts_status`: Processing status (pending/processing/completed/failed)
-- `processing_time_*`: Performance metrics
+- `processing_time_ocr`: OCR processing time
+- `processing_time_tts`: TTS processing time
+- `created_at/updated_at`: Timestamps
+
+### UserProfile Model
+- `user`: One-to-one relationship with User
+- `target_language`: User's target language preference
+- `voice_preference`: TTS voice preference (male/female)
 - `created_at/updated_at`: Timestamps
 
 ## 🚀 Production Deployment
@@ -218,21 +255,23 @@ After model integration:
 For production deployment, consider:
 
 1. **Environment Variables**: Use environment variables for sensitive settings
-2. **Database**: Switch to PostgreSQL or MySQL
+2. **Database**: Switch to PostgreSQL or MySQL for better performance
 3. **Static Files**: Use WhiteNoise or CDN for static file serving
-4. **Media Files**: Use cloud storage (AWS S3, etc.)
+4. **Media Files**: Use cloud storage (AWS S3, etc.) for uploaded images and audio
 5. **Web Server**: Deploy with Gunicorn + Nginx
 6. **Security**: Update `ALLOWED_HOSTS`, use HTTPS, etc.
+7. **Model Caching**: Implement Redis for AI model caching
+8. **Load Balancing**: For high-traffic scenarios
 
 ## 🤝 Contributing
 
-This project is ready for model integration. To contribute:
+This project is **fully functional and ready for use**. To contribute:
 
-1. Complete OCR model training
-2. Complete TTS model training
-3. Integrate models using the prepared pipeline structure
-4. Test the complete workflow
-5. Optimize performance and user experience
+1. **Feature Enhancements**: Add new language support or improve existing features
+2. **UI/UX Improvements**: Enhance the user interface and experience
+3. **Performance Optimization**: Improve model loading and processing speed
+4. **Testing**: Add comprehensive test coverage
+5. **Documentation**: Improve code documentation and user guides
 
 ## 📝 License
 
@@ -240,6 +279,15 @@ This project is part of a Final Year Project (FYP) for academic purposes.
 
 ---
 
-**Ready for Model Integration** 🎯
+## 🎉 **System Complete and Ready for Use!** 
 
-The Django application is fully set up and ready for your trained OCR and TTS models to be integrated!
+The Online Language Learning System is **fully functional** with all AI models integrated and tested. Users can:
+
+- ✅ Upload images and extract text using custom TrOCR models
+- ✅ Generate high-quality speech using SpeechT5 + HiFi-GAN
+- ✅ Translate text between English, Chinese, and Malay
+- ✅ Look up word definitions automatically
+- ✅ Export comprehensive learning notes
+- ✅ Track learning progress and statistics
+
+**Start learning languages today!** 🚀
