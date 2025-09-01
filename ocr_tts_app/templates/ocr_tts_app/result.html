@@ -1,0 +1,409 @@
+{% extends 'ocr_tts_app/base.html' %}
+{% load static %}
+
+{% block title %}Processing Result - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Session Info -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-check-circle"></i>
+                    Processing Results
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Session ID:</strong> {{ session.session_id }}</p>
+                        <p><strong>Created:</strong> {{ session.created_at|date:"M d, Y H:i:s" }}</p>
+                        <p><strong>Image File:</strong> {{ session.image_filename|default:"N/A" }}</p>
+                        <p><strong>Learning Type:</strong> {{ session.get_learning_type_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>OCR Status:</strong> 
+                            <span class="badge bg-{% if session.ocr_status == 'completed' %}success{% elif session.ocr_status == 'failed' %}danger{% elif session.ocr_status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                {{ session.get_ocr_status_display }}
+                            </span>
+                        </p>
+                        <p><strong>TTS Status:</strong> 
+                            <span class="badge bg-{% if session.tts_status == 'completed' %}success{% elif session.tts_status == 'failed' %}danger{% elif session.tts_status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                {{ session.get_tts_status_display }}
+                            </span>
+                        </p>
+                        {% if session.processing_time_ocr %}
+                        <p><strong>OCR Time:</strong> {{ session.processing_time_ocr|floatformat:2 }}s</p>
+                        {% endif %}
+                        {% if session.processing_time_tts %}
+                        <p><strong>TTS Time:</strong> {{ session.processing_time_tts|floatformat:2 }}s</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Uploaded Image -->
+        {% if session.uploaded_image %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-image"></i>
+                    Uploaded Image
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ session.uploaded_image.url }}" alt="Uploaded Image" class="img-fluid rounded shadow" style="max-height: 400px;">
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- OCR Results -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-text-paragraph"></i>
+                    Extracted Text (OCR Results)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if session.ocr_status == 'completed' and session.extracted_text %}
+                    <div class="mb-3">
+                        <label for="extractedText" class="form-label">
+                            <strong>Recognized Text:</strong>
+                            <small class="text-muted">({{ session.word_count|default:0 }} words)</small>
+                        </label>
+                        <textarea id="extractedText" class="form-control" rows="6" readonly>{{ session.extracted_text }}</textarea>
+                        <div class="form-text">
+                            ✅ Text successfully decoded from image using OCR
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="copyToClipboard(this)">
+                            <i class="bi bi-clipboard"></i> Copy Text
+                        </button>
+                        <a href="{% url 'export_learning_note' session.session_id %}" class="btn btn-success" data-confirm="Export learning note for this session?">
+                            <i class="bi bi-download"></i> Export Learning Note
+                        </a>
+                    </div>
+                {% elif session.ocr_status == 'processing' %}
+                    <div class="text-center">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="visually-hidden">Processing...</span>
+                        </div>
+                        <p class="mt-2">OCR processing in progress...</p>
+                    </div>
+                {% elif session.ocr_status == 'failed' %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>OCR Processing Failed:</strong> {{ session.ocr_error }}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        OCR processing has not started yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Dictionary Lookup Results -->
+        {% if session.is_single_word %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-book"></i>
+                    Dictionary Lookup
+                    <span class="badge bg-{% if session.dictionary_status == 'completed' %}success{% elif session.dictionary_status == 'failed' %}danger{% elif session.dictionary_status == 'skipped' %}secondary{% else %}warning{% endif %} ms-2">
+                        {{ session.dictionary_status|title }}
+                    </span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if session.dictionary_status == 'completed' and session.word_definitions %}
+                    <div class="mb-3">
+                        <h6><i class="bi bi-search"></i> Word: <strong>"{{ session.extracted_text }}"</strong></h6>
+                        <p class="text-muted mb-3">Here are the definitions found for this word:</p>
+                        
+                        <!-- Definitions List -->
+                        <div class="definitions-container">
+                            {% for definition in session.word_definitions %}
+                            <div class="definition-item border-start border-primary border-3 ps-3 mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if definition.part_of_speech %}
+                                    <span class="badge bg-info me-2">{{ definition.part_of_speech }}</span>
+                                    {% endif %}
+                                    {% if definition.pronunciation %}
+                                    <span class="text-muted small">{{ definition.pronunciation }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="definition-text mb-2">
+                                    <strong>Definition:</strong> {{ definition.definition }}
+                                </p>
+                                
+                                {% if definition.example %}
+                                <div class="example-text">
+                                    <strong>Example:</strong> 
+                                    <em class="text-secondary">"{{ definition.example }}"</em>
+                                </div>
+                                {% endif %}
+                                
+
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Dictionary Actions -->
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-outline-primary btn-sm" onclick="copyDefinitions(this)">
+                                <i class="bi bi-clipboard"></i> Copy Definitions
+                            </button>
+                        </div>
+                    </div>
+                {% elif session.dictionary_status == 'completed' %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-search"></i>
+                        <strong>No definition found:</strong> We couldn't find any definitions for the word "{{ session.extracted_text }}" in our dictionary.
+                        <div class="mt-2">
+                            <small>This might be because:</small>
+                            <ul class="small mb-0">
+                                <li>The word is misspelled or not recognized correctly by OCR</li>
+                                <li>It's a proper noun or specialized term</li>
+                                <li>The word is not in English (try changing your language preference)</li>
+                            </ul>
+                        </div>
+                    </div>
+                {% elif session.dictionary_status == 'failed' %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Dictionary lookup failed:</strong> There was an error looking up the definition for "{{ session.extracted_text }}".
+                        <div class="mt-2">
+                            <small>This could be due to network issues or dictionary service unavailability.</small>
+                        </div>
+                    </div>
+                {% elif session.dictionary_status == 'skipped' %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Dictionary lookup skipped:</strong> The extracted text contains multiple words. Dictionary lookup is only performed for single words.
+                    </div>
+                {% else %}
+                    <div class="alert alert-secondary">
+                        <i class="bi bi-hourglass-split"></i>
+                        <strong>Dictionary lookup pending:</strong> Word definition lookup is being processed.
+                    </div>
+                {% endif %}
+                
+                <!-- Learning Tips -->
+                {% if session.dictionary_status == 'completed' and session.word_definitions %}
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6><i class="bi bi-lightbulb"></i> Learning Tips:</h6>
+                    <ul class="mb-0 small">
+                        <li>Try using this word in your own sentences</li>
+                        <li>Practice pronunciation and spelling of this word</li>
+                        <li>Look for this word in other texts to see different contexts</li>
+                        {% if session.word_definitions|length > 1 %}
+                        <li>Notice how this word has multiple meanings - context matters!</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- TTS Results -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-volume-up"></i>
+                    Text-to-Speech Audio
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if session.tts_status == 'completed' and session.audio_url %}
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Generated Audio:</strong></label>
+                        <div class="p-3 bg-light rounded">
+                            <audio controls class="w-100 mb-3">
+                                <source src="{{ session.audio_url }}" type="audio/wav">
+                                Your browser does not support the audio element.
+                            </audio>
+                            <div class="d-flex gap-2">
+                                <a href="{{ session.audio_url }}" class="btn btn-primary" download="{{ session.audio_filename }}" data-confirm="Download this audio file?">
+                                    <i class="bi bi-download"></i> Download Audio
+                                </a>
+                                <button class="btn btn-outline-primary" onclick="playAudio()">
+                                    <i class="bi bi-play-circle"></i> Play
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="pauseAudio()">
+                                    <i class="bi bi-pause-circle"></i> Pause
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% elif session.tts_status == 'processing' %}
+                    <div class="text-center">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="visually-hidden">Processing...</span>
+                        </div>
+                        <p class="mt-2">TTS processing in progress...</p>
+                    </div>
+                {% elif session.tts_status == 'failed' %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>TTS Processing Failed:</strong> {{ session.tts_error }}
+                        {% if session.extracted_text %}
+                        <hr>
+                        <p class="mb-0"><strong>Retry TTS:</strong> You can try the <a href="{% url 'text_to_speech' %}" class="alert-link">Text-to-Speech page</a> with the extracted text above.</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-hourglass-split"></i>
+                        <strong>TTS Processing Pending:</strong> Audio generation is queued for processing.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'home' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Process Another Image
+                    </a>
+                    <a href="{% url 'text_to_speech' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-mic"></i> Try Text to Speech
+                    </a>
+                    <a href="{% url 'session_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-list"></i> View All Sessions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function copyToClipboard(buttonElement) {
+        const textArea = document.getElementById('extractedText');
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(textArea.value).then(function() {
+            // Show success message using the passed button element
+            if (buttonElement) {
+                const originalText = buttonElement.innerHTML;
+                buttonElement.innerHTML = '<i class="bi bi-check"></i> Copied!';
+                buttonElement.classList.remove('btn-outline-primary');
+                buttonElement.classList.add('btn-success');
+                
+                setTimeout(function() {
+                    buttonElement.innerHTML = originalText;
+                    buttonElement.classList.remove('btn-success');
+                    buttonElement.classList.add('btn-outline-primary');
+                }, 2000);
+            }
+        }).catch(function(error) {
+            console.error('Copy failed:', error);
+            alert('Failed to copy text to clipboard. Your browser may not support this feature.');
+        });
+    }
+    
+
+    
+    function playAudio() {
+        const audio = document.querySelector('audio');
+        if (audio) {
+            audio.play();
+        }
+    }
+    
+    function pauseAudio() {
+        const audio = document.querySelector('audio');
+        if (audio) {
+            audio.pause();
+        }
+    }
+    
+    // Dictionary-related functions
+    
+    function copyDefinitions(buttonElement) {
+        const definitions = [];
+        const definitionItems = document.querySelectorAll('.definition-item');
+        
+        if (definitionItems.length === 0) {
+            alert('No definitions found to copy');
+            return;
+        }
+        
+        definitionItems.forEach((item, index) => {
+            // Get part of speech
+            const partOfSpeechElement = item.querySelector('.badge');
+            const partOfSpeech = partOfSpeechElement ? partOfSpeechElement.textContent.trim() : '';
+            
+            // Get definition text (extract just the definition part)
+            const definitionElement = item.querySelector('.definition-text');
+            let definitionText = '';
+            if (definitionElement) {
+                const fullText = definitionElement.textContent.trim();
+                // Remove "Definition: " prefix if present
+                definitionText = fullText.replace(/^Definition:\s*/, '');
+            }
+            
+            // Get example text (extract just the example part) 
+            const exampleElement = item.querySelector('.example-text');
+            let exampleText = '';
+            if (exampleElement) {
+                const fullText = exampleElement.textContent.trim();
+                // Remove "Example: " prefix and quotes if present
+                exampleText = fullText.replace(/^Example:\s*["']?/, '').replace(/["']?$/, '');
+            }
+            
+            // Build definition entry
+            let definitionEntry = `${index + 1}. `;
+            if (partOfSpeech) {
+                definitionEntry += `(${partOfSpeech}) `;
+            }
+            definitionEntry += definitionText;
+            if (exampleText) {
+                definitionEntry += `\n   Example: "${exampleText}"`;
+            }
+            
+            definitions.push(definitionEntry);
+        });
+        
+        const fullText = `Word: "{{ session.extracted_text }}"\n\n${definitions.join('\n\n')}`;
+        
+        navigator.clipboard.writeText(fullText).then(function() {
+            // Use the button element passed to the function
+            if (buttonElement) {
+                const originalText = buttonElement.innerHTML;
+                buttonElement.innerHTML = '<i class="bi bi-check"></i> Copied!';
+                buttonElement.classList.add('btn-success');
+                buttonElement.classList.remove('btn-outline-primary');
+                
+                setTimeout(() => {
+                    buttonElement.innerHTML = originalText;
+                    buttonElement.classList.remove('btn-success');
+                    buttonElement.classList.add('btn-outline-primary');
+                }, 2000);
+            }
+        }).catch(function(error) {
+            console.error('Copy failed:', error);
+            alert('Failed to copy definitions to clipboard. Your browser may not support this feature.');
+        });
+    }
+    
+    // Auto-refresh for processing sessions
+    {% if session.ocr_status == 'processing' or session.tts_status == 'processing' %}
+    setTimeout(function() {
+        location.reload();
+    }, 3000); // Refresh every 3 seconds
+    {% endif %}
+</script>
+{% endblock %}

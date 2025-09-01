@@ -1,0 +1,209 @@
+{% extends 'ocr_tts_app/base.html' %}
+{% load static %}
+
+{% block title %}{{ platform_name }} - Learn Languages with AI{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white text-center py-5 rounded">
+            <div class="container">
+                <h1 class="display-4 mb-3">
+                    <i class="bi bi-translate"></i>
+                    {{ platform_name }}
+                </h1>
+                <p class="lead mb-4">
+                    Transform your language learning with cutting-edge OCR and Text-to-Speech technology. 
+                    Upload images, extract text, and convert to natural speech - all powered by AI.
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg">
+                        <i class="bi bi-person-plus"></i> Get Started Free
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-box-arrow-in-right"></i> Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-12 text-center mb-4">
+        <h2 class="h3 text-primary">Powerful Learning Features</h2>
+        <p class="text-muted">Everything you need for effective language learning</p>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-primary shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="text-primary mb-3">
+                    <i class="bi bi-image" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-primary">Smart OCR Technology</h5>
+                <p class="card-text">
+                    Upload images with handwritten or printed text and extract content with 
+                    state-of-the-art TrOCR technology. Works with multiple languages and fonts.
+                </p>
+                <ul class="list-unstyled text-start">
+                    <li><i class="bi bi-check-circle text-success"></i> Handwriting recognition</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Multi-language support</li>
+                    <li><i class="bi bi-check-circle text-success"></i> High accuracy</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-success shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="text-success mb-3">
+                    <i class="bi bi-mic" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-success">Natural Text-to-Speech</h5>
+                <p class="card-text">
+                    Convert extracted text to natural-sounding speech with advanced TTS models. 
+                    Choose from different voices and speaking styles.
+                </p>
+                <ul class="list-unstyled text-start">
+                    <li><i class="bi bi-check-circle text-success"></i> Natural voice synthesis</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Multiple voice options</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Downloadable audio</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-info shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="text-info mb-3">
+                    <i class="bi bi-graph-up" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-info">Progress Tracking</h5>
+                <p class="card-text">
+                    Monitor your learning journey with detailed statistics, session history, 
+                    and personal achievements to stay motivated.
+                </p>
+                <ul class="list-unstyled text-start">
+                    <li><i class="bi bi-check-circle text-success"></i> Learning statistics</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Session history</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Achievement tracking</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="row mb-5">
+    <div class="col-12 text-center mb-4">
+        <h2 class="h3 text-primary">How It Works</h2>
+        <p class="text-muted">Simple steps to start learning</p>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="text-center">
+            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                <span class="h4 mb-0">1</span>
+            </div>
+            <h6>Sign Up</h6>
+            <p class="text-muted small">Create your free account in seconds</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="text-center">
+            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                <span class="h4 mb-0">2</span>
+            </div>
+            <h6>Upload Image</h6>
+            <p class="text-muted small">Upload an image containing text to extract</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="text-center">
+            <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                <span class="h4 mb-0">3</span>
+            </div>
+            <h6>Extract & Convert</h6>
+            <p class="text-muted small">AI extracts text and converts to speech</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="text-center">
+            <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                <span class="h4 mb-0">4</span>
+            </div>
+            <h6>Learn & Practice</h6>
+            <p class="text-muted small">Listen, practice, and track your progress</p>
+        </div>
+    </div>
+</div>
+
+<!-- Supported Languages Section -->
+{% if supported_languages %}
+<div class="row mb-5">
+    <div class="col-12 text-center mb-4">
+        <h2 class="h3 text-primary">Supported Languages</h2>
+        <p class="text-muted">Learn and practice with multiple languages</p>
+    </div>
+    
+    <div class="col-12">
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            {% for lang_code, lang_name in supported_languages %}
+            <span class="badge bg-outline-primary p-2">
+                <i class="bi bi-translate"></i> {{ lang_name }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Call-to-Action Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-light border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <h3 class="text-primary mb-3">Ready to Start Learning?</h3>
+                <p class="text-muted mb-4">
+                    Join thousands of learners who are already using AI-powered tools to master new languages.
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-rocket"></i> Start Learning Now
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-person-check"></i> I Have an Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.jumbotron {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.badge.bg-outline-primary {
+    background-color: transparent !important;
+    border: 1px solid #007bff;
+    color: #007bff;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+}
+</style>
+{% endblock %}

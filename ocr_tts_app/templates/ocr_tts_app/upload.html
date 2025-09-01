@@ -1,0 +1,133 @@
+{% extends 'ocr_tts_app/base.html' %}
+{% load static %}
+
+{% block title %}Upload Image - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Upload Form Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-cloud-upload"></i>
+                    Upload Image for OCR Processing
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Upload an image containing text (handwriting or printed text) to extract and convert to speech.
+                </p>
+                
+                <form method="post" enctype="multipart/form-data" action="{% url 'upload' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.uploaded_image.id_for_label }}" class="form-label">
+                            <strong>{{ form.uploaded_image.label }}</strong>
+                        </label>
+                        {{ form.uploaded_image }}
+                        {% if form.uploaded_image.help_text %}
+                            <div class="form-text">{{ form.uploaded_image.help_text }}</div>
+                        {% endif %}
+                        {% if form.uploaded_image.errors %}
+                            <div class="text-danger">
+                                {% for error in form.uploaded_image.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Image Preview Area -->
+                    <div id="imagePreview" class="mb-4" style="display: none;">
+                        <label class="form-label"><strong>Preview:</strong></label>
+                        <div class="border rounded p-3 text-center">
+                            <img id="previewImg" src="" alt="Preview" class="img-fluid" style="max-height: 300px;">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-upload"></i>
+                            Upload & Process Image
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Processing Info -->
+                <div class="mt-4 p-3 bg-info bg-opacity-10 rounded">
+                    <h6><i class="bi bi-info-circle"></i> Processing Steps:</h6>
+                    <ol class="mb-0">
+                        <li><strong>OCR:</strong> Extract text from your image using TrOCR model</li>
+                        <li><strong>TTS:</strong> Convert extracted text to speech audio</li>
+                        <li><strong>Result:</strong> View text and play/download audio</li>
+                    </ol>
+                    <p class="mt-2 mb-0 text-success">
+                        <i class="bi bi-check-circle"></i>
+                        <small><strong>Ready:</strong> Your fine-tuned TrOCR model (IIIT5K Word dataset) is integrated and ready for enhanced text recognition!</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Sessions -->
+        {% if recent_sessions %}
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    Recent Processing Sessions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for session in recent_sessions %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-secondary">
+                            <div class="card-body p-3">
+                                <h6 class="card-title">
+                                    Session {{ session.session_id|slice:":8" }}...
+                                </h6>
+                                <p class="card-text small text-muted mb-2">
+                                    {{ session.created_at|date:"M d, Y H:i" }}
+                                </p>
+                                <p class="card-text small">
+                                    {{ session.extracted_text|truncatechars:80 }}
+                                </p>
+                                <a href="{% url 'result' session.session_id %}" class="btn btn-sm btn-outline-primary">
+                                    View Result
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Image preview functionality
+    document.getElementById('{{ form.uploaded_image.id_for_label }}').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

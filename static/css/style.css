@@ -1,0 +1,201 @@
+/* Custom styles for Online Language Learning System */
+
+/* Base styling */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: 600;
+}
+
+.navbar-brand i {
+    margin-right: 8px;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    border-bottom: 1px solid rgba(0,0,0,0.125);
+}
+
+/* File input styling */
+.form-control-file {
+    padding: 12px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    transition: border-color 0.3s ease;
+}
+
+.form-control-file:hover {
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+}
+
+/* Button enhancements */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-lg {
+    padding: 12px 24px;
+}
+
+/* Audio player styling */
+audio {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Text area enhancements */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+/* Image preview */
+#imagePreview img {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Progress indicators */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+    
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
+/* Animation for processing states */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+.processing {
+    animation: pulse 2s infinite;
+}
+
+/* Custom alert styling */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.alert-dismissible .btn-close {
+    padding: 0.75rem 1rem;
+}
+
+/* Session card enhancements */
+.session-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.session-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Icon enhancements */
+.bi {
+    line-height: 1;
+}
+
+/* Custom spacing */
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.gap-3 {
+    gap: 1rem !important;
+}
+
+/* Loading states */
+.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Success states */
+.success-glow {
+    box-shadow: 0 0 20px rgba(25, 135, 84, 0.3);
+}
+
+/* Error states */
+.error-glow {
+    box-shadow: 0 0 20px rgba(220, 53, 69, 0.3);
+}

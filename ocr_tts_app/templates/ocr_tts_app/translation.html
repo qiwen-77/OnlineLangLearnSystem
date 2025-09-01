@@ -1,0 +1,462 @@
+{% extends 'ocr_tts_app/base.html' %}
+{% load static %}
+
+{% block title %}Translation - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Translation Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-translate"></i>
+                    Multilingual Translator
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Translate text between English, Chinese, and Malay using advanced AI translation models.
+                </p>
+                
+                <!-- Language Selection Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-5">
+                        <label for="sourceLanguage" class="form-label">
+                            <strong><i class="bi bi-arrow-right"></i> From (Source Language)</strong>
+                        </label>
+                        <select id="sourceLanguage" class="form-select form-select-lg">
+                            {% for code, name in supported_languages %}
+                            <option value="{{ code }}" {% if code == 'en' %}selected{% endif %}>{{ name }} ({{ code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end justify-content-center">
+                        <button id="swapLanguages" type="button" class="btn btn-outline-primary btn-lg" title="Swap Languages">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <label for="targetLanguage" class="form-label">
+                            <strong><i class="bi bi-arrow-left"></i> To (Target Language)</strong>
+                        </label>
+                        <select id="targetLanguage" class="form-select form-select-lg">
+                            {% for code, name in supported_languages %}
+                            <option value="{{ code }}" {% if code == 'zh' %}selected{% endif %}>{{ name }} ({{ code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Input/Output Row -->
+                <div class="row g-3">
+                    <!-- Source Text Input -->
+                    <div class="col-md-6">
+                        <label for="sourceText" class="form-label">
+                            <strong>Enter text to translate:</strong>
+                        </label>
+                        <textarea 
+                            id="sourceText" 
+                            class="form-control" 
+                            rows="8" 
+                            placeholder="Type or paste your text here..."
+                            maxlength="5000"
+                        ></textarea>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small class="text-muted">
+                                Characters: <span id="charCount">0</span>/5000
+                            </small>
+                            <button id="clearText" type="button" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Translation Output -->
+                    <div class="col-md-6">
+                        <label for="translatedText" class="form-label">
+                            <strong>Translation result:</strong>
+                        </label>
+                        <div class="position-relative">
+                            <textarea 
+                                id="translatedText" 
+                                class="form-control" 
+                                rows="8" 
+                                placeholder="Translation will appear here..."
+                                readonly
+                            ></textarea>
+                            <div id="translationLoading" class="position-absolute top-50 start-50 translate-middle d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Translating...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small id="translationStatus" class="text-muted"></small>
+                            <div>
+                                <button id="copyTranslation" type="button" class="btn btn-outline-success btn-sm me-2" disabled>
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <button id="translateBtn" type="button" class="btn btn-primary btn-lg me-3">
+                            <i class="bi bi-arrow-right-circle"></i>
+                            Translate
+                        </button>
+                        
+                        <div class="btn-group" role="group">
+                            <button id="speakSource" type="button" class="btn btn-outline-info" disabled>
+                                <i class="bi bi-volume-up"></i> Speak Original
+                            </button>
+                            <button id="speakTranslation" type="button" class="btn btn-outline-info" disabled>
+                                <i class="bi bi-volume-up"></i> Speak Translation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TTS Voice Selection -->
+                <div class="row mt-3">
+                    <div class="col-12 text-center">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Voice selection">
+                            <input type="radio" class="btn-check" name="voiceOption" id="voiceFemale" value="female" checked>
+                            <label class="btn btn-outline-secondary" for="voiceFemale">
+                                <i class="bi bi-person"></i> Female Voice
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="voiceOption" id="voiceMale" value="male">
+                            <label class="btn btn-outline-secondary" for="voiceMale">
+                                <i class="bi bi-person-fill"></i> Male Voice
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+
+                
+                <!-- Sample Texts -->
+                <div class="mt-4">
+                    <h6><i class="bi bi-lightbulb"></i> Try these sample texts:</h6>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-3">
+                            <button class="btn btn-outline-secondary btn-sm mb-2 w-100 sample-btn" 
+                                    data-text="Hello, how are you today?">
+                                Sample 1: Greeting
+                            </button>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <button class="btn btn-outline-secondary btn-sm mb-2 w-100 sample-btn" 
+                                    data-text="Learning languages opens new opportunities and helps us connect with different cultures around the world.">
+                                Sample 2: Education
+                            </button>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <button class="btn btn-outline-secondary btn-sm mb-2 w-100 sample-btn" 
+                                    data-text="Technology has revolutionized the way we communicate and learn new skills.">
+                                Sample 3: Technology
+                            </button>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <button class="btn btn-outline-secondary btn-sm mb-2 w-100 sample-btn" 
+                                    data-text="The weather is beautiful today. Would you like to go for a walk in the park?">
+                                Sample 4: Conversation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Translation Info -->
+                <div class="mt-4 p-3 bg-primary bg-opacity-10 rounded">
+                    <h6><i class="bi bi-info-circle"></i> About Translation:</h6>
+                    <ul class="mb-0">
+                        <li>Powered by advanced AI translation models (M2M100)</li>
+                        <li>Supports bidirectional translation between English, Chinese, and Malay</li>
+                        <li>Text-to-speech integration with male/female voice options</li>
+                        <li>High accuracy for common phrases and technical content</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Features Overview -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card border-info h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-mic text-info" style="font-size: 2rem;"></i>
+                        <h6 class="card-title mt-2">Text to Speech</h6>
+                        <p class="card-text small">Convert any text to natural-sounding audio.</p>
+                        <a href="{% url 'text_to_speech' %}" class="btn btn-outline-info btn-sm">Try TTS</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-primary h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-translate text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="card-title mt-2">Translation</h6>
+                        <p class="card-text small">Translate between multiple languages instantly.</p>
+                        <button class="btn btn-primary btn-sm" disabled>Current Page</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-secondary h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-image text-secondary" style="font-size: 2rem;"></i>
+                        <h6 class="card-title mt-2">OCR + Translation</h6>
+                        <p class="card-text small">Extract text from images and translate it.</p>
+                        <a href="{% url 'upload_form' %}" class="btn btn-outline-secondary btn-sm">Try OCR</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // DOM elements
+    const sourceText = document.getElementById('sourceText');
+    const translatedText = document.getElementById('translatedText');
+    const sourceLanguage = document.getElementById('sourceLanguage');
+    const targetLanguage = document.getElementById('targetLanguage');
+    const translateBtn = document.getElementById('translateBtn');
+    const swapLanguages = document.getElementById('swapLanguages');
+    const clearText = document.getElementById('clearText');
+    const copyTranslation = document.getElementById('copyTranslation');
+    const speakSource = document.getElementById('speakSource');
+    const speakTranslation = document.getElementById('speakTranslation');
+    const translationStatus = document.getElementById('translationStatus');
+    const translationLoading = document.getElementById('translationLoading');
+    const charCount = document.getElementById('charCount');
+    const sampleButtons = document.querySelectorAll('.sample-btn');
+    
+    // Character counter
+    function updateCharCount() {
+        const count = sourceText.value.length;
+        charCount.textContent = count;
+        
+        if (count > 5000) {
+            charCount.style.color = 'red';
+        } else if (count > 4000) {
+            charCount.style.color = 'orange';
+        } else {
+            charCount.style.color = '';
+        }
+        
+        // Enable/disable buttons based on content
+        const hasSource = sourceText.value.trim().length > 0;
+        const hasTranslation = translatedText.value.trim().length > 0;
+        
+        translateBtn.disabled = !hasSource || sourceLanguage.value === targetLanguage.value;
+        speakSource.disabled = !hasSource;
+        speakTranslation.disabled = !hasTranslation;
+        copyTranslation.disabled = !hasTranslation;
+    }
+    
+    sourceText.addEventListener('input', updateCharCount);
+    
+    // Language change handlers
+    function onLanguageChange() {
+        updateCharCount();
+        // Clear translation when languages change
+        translatedText.value = '';
+        translationStatus.textContent = '';
+    }
+    
+    sourceLanguage.addEventListener('change', onLanguageChange);
+    targetLanguage.addEventListener('change', onLanguageChange);
+    
+    // Swap languages
+    swapLanguages.addEventListener('click', () => {
+        const temp = sourceLanguage.value;
+        sourceLanguage.value = targetLanguage.value;
+        targetLanguage.value = temp;
+        
+        // Swap text content too
+        const tempText = sourceText.value;
+        sourceText.value = translatedText.value;
+        translatedText.value = tempText;
+        
+        updateCharCount();
+    });
+    
+    // Clear text
+    clearText.addEventListener('click', () => {
+        sourceText.value = '';
+        translatedText.value = '';
+        translationStatus.textContent = '';
+        updateCharCount();
+        sourceText.focus();
+    });
+    
+    // Copy translation
+    copyTranslation.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(translatedText.value);
+            const originalText = copyTranslation.innerHTML;
+            copyTranslation.innerHTML = '<i class="bi bi-check"></i> Copied!';
+            copyTranslation.classList.remove('btn-outline-success');
+            copyTranslation.classList.add('btn-success');
+            
+            setTimeout(() => {
+                copyTranslation.innerHTML = originalText;
+                copyTranslation.classList.remove('btn-success');
+                copyTranslation.classList.add('btn-outline-success');
+            }, 2000);
+        } catch (err) {
+            alert('Failed to copy to clipboard');
+        }
+    });
+    
+    // Sample text insertion
+    sampleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            sourceText.value = btn.dataset.text;
+            updateCharCount();
+            sourceText.focus();
+        });
+    });
+    
+    // Translation function
+    async function translateText() {
+        const text = sourceText.value.trim();
+        const sourceLang = sourceLanguage.value;
+        const targetLang = targetLanguage.value;
+        
+        if (!text) {
+            translationStatus.textContent = 'Please enter text to translate';
+            translationStatus.className = 'text-danger';
+            return;
+        }
+        
+        if (sourceLang === targetLang) {
+            translationStatus.textContent = 'Source and target languages cannot be the same';
+            translationStatus.className = 'text-danger';
+            return;
+        }
+        
+        // Show loading state
+        translateBtn.disabled = true;
+        translationLoading.classList.remove('d-none');
+        translationStatus.textContent = 'Translating...';
+        translationStatus.className = 'text-muted';
+        
+        try {
+            const response = await fetch('/api/translate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    source_lang: sourceLang,
+                    target_lang: targetLang
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                translatedText.value = data.translated_text;
+                translationStatus.textContent = `Translated from ${sourceLang.toUpperCase()} to ${targetLang.toUpperCase()} ✓`;
+                translationStatus.className = 'text-success';
+            } else {
+                throw new Error(data.error || 'Translation failed');
+            }
+            
+        } catch (error) {
+            translationStatus.textContent = `Translation failed: ${error.message}`;
+            translationStatus.className = 'text-danger';
+            translatedText.value = '';
+        } finally {
+            translateBtn.disabled = false;
+            translationLoading.classList.add('d-none');
+            updateCharCount();
+        }
+    }
+    
+    // Text-to-speech function
+    async function speakText(text, language) {
+        if (!text.trim()) return;
+        
+        const voice = document.querySelector('input[name="voiceOption"]:checked').value;
+        // Speed is fixed at 0.5x for clarity
+        const speed = 0.5;
+        
+        try {
+            const response = await fetch('/api/tts/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    language: language,
+                    voice: voice,
+                    speed: speed
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Play the audio
+                const audio = new Audio(data.audio_url);
+                audio.play();
+            } else {
+                throw new Error(data.error || 'TTS failed');
+            }
+            
+        } catch (error) {
+            alert(`Text-to-speech failed: ${error.message}`);
+        }
+    }
+    
+    // Event listeners
+    translateBtn.addEventListener('click', translateText);
+    
+    speakSource.addEventListener('click', () => {
+        speakText(sourceText.value, sourceLanguage.value);
+    });
+    
+    speakTranslation.addEventListener('click', () => {
+        speakText(translatedText.value, targetLanguage.value);
+    });
+    
+    // Enter key to translate
+    sourceText.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            if (!translateBtn.disabled) {
+                translateText();
+            }
+        }
+    });
+    
+    // Auto-resize textareas
+    function autoResize(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+    
+    sourceText.addEventListener('input', () => autoResize(sourceText));
+    
+    // TTS Speed control
+    // TTS Speed control (Fixed at 0.5x)
+    // No speed selection needed - fixed for clarity
+    
+    // Initial setup
+    updateCharCount();
+</script>
+{% endblock %}

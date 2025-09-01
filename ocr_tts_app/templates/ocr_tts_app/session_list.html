@@ -1,0 +1,212 @@
+{% extends 'ocr_tts_app/base.html' %}
+{% load static %}
+
+{% block title %}Processing History - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    Processing History
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">
+                    View all your OCR and TTS processing sessions. You can revisit results, download audio files, 
+                    and track your processing history.
+                </p>
+            </div>
+        </div>
+
+        <!-- Actions Row -->
+        <div class="d-flex justify-content-end mb-3">
+            {% if sessions %}
+            <form method="post" action="{% url 'delete_all_sessions' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="Delete ALL your sessions? This cannot be undone." data-confirm-title="Confirm Deletion">
+                    <i class="bi bi-trash"></i> Delete All
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Sessions List -->
+        {% if sessions %}
+            <div class="row">
+                {% for session in sessions %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                {{ session.created_at|date:"M d, Y H:i" }}
+                            </small>
+                            <span class="badge bg-{% if session.is_completed %}success{% elif session.has_errors %}danger{% else %}warning{% endif %}">
+                                {% if session.is_completed %}
+                                    Completed
+                                {% elif session.has_errors %}
+                                    Error
+                                {% else %}
+                                    Processing
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                Session {{ session.session_id|slice:":8" }}...
+                            </h6>
+                            
+                            <!-- Status Indicators -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small><strong>OCR:</strong></small>
+                                    <span class="badge bg-{% if session.ocr_status == 'completed' %}success{% elif session.ocr_status == 'failed' %}danger{% elif session.ocr_status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                        {{ session.get_ocr_status_display }}
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small><strong>TTS:</strong></small>
+                                    <span class="badge bg-{% if session.tts_status == 'completed' %}success{% elif session.tts_status == 'failed' %}danger{% elif session.tts_status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                        {{ session.get_tts_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Image Info -->
+                            {% if session.image_filename %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-image"></i>
+                                    {{ session.image_filename|truncatechars:30 }}
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Extracted Text Preview -->
+                            {% if session.extracted_text %}
+                            <div class="mb-3">
+                                <small class="text-muted d-block mb-1"><strong>Text Preview:</strong></small>
+                                <p class="card-text small text-truncate">
+                                    {{ session.extracted_text|truncatechars:100 }}
+                                </p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Processing Times -->
+                            {% if session.processing_time_ocr or session.processing_time_tts %}
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    {% if session.processing_time_ocr %}
+                                        <i class="bi bi-stopwatch"></i>
+                                        OCR: {{ session.processing_time_ocr|floatformat:1 }}s
+                                    {% endif %}
+                                    {% if session.processing_time_tts %}
+                                        {% if session.processing_time_ocr %} | {% endif %}
+                                        TTS: {{ session.processing_time_tts|floatformat:1 }}s
+                                    {% endif %}
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-2 align-items-center">
+                                <a href="{% url 'result' session.session_id %}" class="btn btn-primary btn-sm flex-fill">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                {% if session.audio_url %}
+                                <a href="{{ session.audio_url }}" class="btn btn-outline-success btn-sm" download="{{ session.audio_filename }}" data-confirm="Download this audio file?">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                {% endif %}
+                                <form method="post" action="{% url 'delete_session' session.session_id %}" class="ms-auto">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="Delete this session?" data-confirm-title="Confirm Deletion">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination placeholder -->
+            {% if sessions.count > 12 %}
+            <div class="d-flex justify-content-center mt-4">
+                <p class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Showing recent sessions. Pagination can be added for larger datasets.
+                </p>
+            </div>
+            {% endif %}
+            
+        {% else %}
+            <!-- Empty State -->
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">No Processing Sessions Yet</h4>
+                    <p class="text-muted mb-4">
+                        You haven't processed any images or text yet. Start by uploading an image or entering text to convert to speech.
+                    </p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{% url 'home' %}" class="btn btn-primary">
+                            <i class="bi bi-cloud-upload"></i> Upload Image
+                        </a>
+                        <a href="{% url 'text_to_speech' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-mic"></i> Text to Speech
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Summary Stats -->
+        {% if sessions %}
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h5 class="text-primary">{{ sessions.count }}</h5>
+                        <small class="text-muted">Total Sessions</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-success">{{ sessions|length }}</h5>
+                        <small class="text-muted">Completed OCR</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-info">0</h5>
+                        <small class="text-muted">Completed TTS</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-warning">{{ sessions.count }}</h5>
+                        <small class="text-muted">Pending TTS</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh for sessions with processing status
+    const hasProcessingSessions = {% if sessions %}{{ sessions|length }} > 0{% else %}false{% endif %};
+    
+    if (hasProcessingSessions) {
+        // Check if any session is still processing
+        const processingElements = document.querySelectorAll('.badge.bg-warning');
+        if (processingElements.length > 0) {
+            setTimeout(function() {
+                location.reload();
+            }, 5000); // Refresh every 5 seconds if there are processing sessions
+        }
+    }
+</script>
+{% endblock %}
