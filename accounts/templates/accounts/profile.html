@@ -8,7 +8,7 @@
     <div class="col-lg-8">
         <!-- Profile Information Card -->
         <div class="card shadow-sm mb-4">
-            <div class="card-header bg-info text-white">
+            <div class="card-header text-white" style="background: var(--gradient-info);">
                 <h4 class="card-title mb-0">
                     <i class="bi bi-person-circle"></i>
                     Profile Information
@@ -93,7 +93,7 @@
                     </div>
                     
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary" data-confirm="Update your profile with these changes?" data-confirm-title="Confirm Update">
+                        <button type="submit" class="btn" style="background: var(--gradient-info); color: white; border: none;" data-confirm="Update your profile with these changes?" data-confirm-title="Confirm Update">
                             <i class="bi bi-check-circle"></i>
                             Update Profile
                         </button>
@@ -110,7 +110,7 @@
     <div class="col-lg-4">
         <!-- User Statistics Card -->
         <div class="card shadow-sm mb-4">
-            <div class="card-header bg-success text-white">
+            <div class="card-header text-white" style="background: var(--gradient-success);">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-graph-up"></i>
                     Learning Statistics
@@ -147,7 +147,7 @@
         
         <!-- Account Info Card -->
         <div class="card shadow-sm mb-4">
-            <div class="card-header bg-secondary text-white">
+            <div class="card-header text-white" style="background: var(--gradient-primary);">
                 <h6 class="card-title mb-0">
                     <i class="bi bi-info-circle"></i>
                     Account Information
@@ -173,7 +173,7 @@
                 </div>
                 
                 <div class="d-grid">
-                    <a href="#" class="btn btn-outline-warning btn-sm">
+                    <a href="{% url 'accounts:password_reset' %}" class="btn btn-sm" style="background: var(--gradient-warning); color: white; border: none;">
                         <i class="bi bi-key"></i>
                         Change Password
                     </a>

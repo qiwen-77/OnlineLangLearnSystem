@@ -7,15 +7,15 @@
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
         <div class="card shadow">
-            <div class="card-header bg-success text-white text-center">
+            <div class="card-header text-white text-center" style="background: var(--gradient-success);">
                 <h3 class="card-title mb-0">
-                    <i class="bi bi-person-plus"></i>
-                    Join Language Learning Hub
+                    <i class="bi bi-mortarboard-fill"></i>
+                    Join <span class="gradient-text-light">Learnify</span>
                 </h3>
             </div>
             <div class="card-body p-4">
                 <p class="text-center text-muted mb-4">
-                    Create your account and start your language learning journey today!
+                    Create your account and start your AI-powered language learning journey today!
                 </p>
                 
                 <form method="post" id="registrationForm">
@@ -160,7 +160,7 @@
                     </div>
                     
                     <div class="d-grid mb-3">
-                        <button type="submit" class="btn btn-success btn-lg">
+                        <button type="submit" class="btn btn-lg" style="background: var(--gradient-success); color: white; border: none;">
                             <i class="bi bi-person-plus"></i>
                             Create Account
                         </button>
@@ -212,6 +212,18 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.gradient-text-light {
+    background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}

@@ -158,14 +158,23 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Email configuration for password reset
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-# For production, use:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
+# Development: Emails are printed to console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Production email settings (uncomment and configure for real email sending):
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # For Gmail
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'qiwenlee77@gmail.com'
+EMAIL_HOST_PASSWORD = 'rpdarrgtnunxcltn'  # Use App Password for Gmail
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_SUBJECT_PREFIX = '[Learnify] '
+SERVER_EMAIL = EMAIL_HOST_USER
+
+# Alternative: File-based email backend (saves emails to files for testing)
+# EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+# EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 # Messages framework
 MESSAGE_TAGS = {

@@ -18,9 +18,30 @@ logger = logging.getLogger(__name__)
 
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'accounts/password_reset.html'
-    email_template_name = 'accounts/password_reset_email.html'
+    # Send a plain-text body plus an HTML alternative to ensure proper rendering in inboxes
+    email_template_name = 'accounts/password_reset_email.txt'
+    html_email_template_name = 'accounts/password_reset_email.html'
     subject_template_name = 'accounts/password_reset_subject.txt'
     success_url = reverse_lazy('accounts:password_reset_done')
+
+    def get_email_context(self, context):
+        """Inject an absolute reset_url built from the current request host.
+        This avoids localhost/127.0.0.1 issues when opening the email on another device.
+        """
+        from django.urls import reverse
+
+        request = getattr(self, 'request', None)
+        uidb64 = context.get('uid')
+        token = context.get('token')
+
+        if request and uidb64 and token:
+            reset_path = reverse('accounts:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+            reset_url = request.build_absolute_uri(reset_path)
+            context['reset_url'] = reset_url
+
+        # Friendly site name
+        context.setdefault('site_name', 'Learnify')
+        return context
 
 class CustomPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'accounts/password_reset_done.html'

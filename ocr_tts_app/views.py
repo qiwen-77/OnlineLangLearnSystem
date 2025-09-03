@@ -72,7 +72,7 @@ class HomeView(View):
         
         # Show public home page for anonymous users
         context = {
-            'platform_name': getattr(settings, 'PLATFORM_NAME', 'Language Learning Hub'),
+            'platform_name': 'Learnify',
             'supported_languages': getattr(settings, 'SUPPORTED_LANGUAGES', []),
         }
         return render(request, 'ocr_tts_app/home.html', context)
@@ -109,6 +109,10 @@ class DashboardView(LoginRequiredMixin, View):
         # Recent sessions for display
         recent_display_sessions = sessions[:10]
         
+        # Chart data for analytics
+        chart_data = self._get_chart_data(user, sessions)
+        feature_usage = self._get_feature_usage(sessions)
+        
         context = {
             'profile': profile,
             'sessions': recent_display_sessions,
@@ -117,6 +121,8 @@ class DashboardView(LoginRequiredMixin, View):
             'favorite_sessions': favorite_sessions[:5],
             'recent_sessions_count': recent_sessions.count(),
             'session_types': session_types,
+            'chart_data': chart_data,
+            'feature_usage': feature_usage,
             'stats': {
                 'total_sessions': total_sessions,
                 'completed_sessions': completed_sessions,
@@ -127,6 +133,53 @@ class DashboardView(LoginRequiredMixin, View):
         }
         
         return render(request, 'ocr_tts_app/dashboard.html', context)
+    
+    def _get_chart_data(self, user, sessions):
+        """Generate chart data for the last 7 days"""
+        from datetime import datetime, timedelta
+        
+        # Initialize data arrays
+        ocr_data = []              # image_ocr
+        tts_data = []              # text_input (direct TTS)
+        translation_data = []      # practice (used here as translation proxy)
+        
+        # Get last 7 days of data (in reverse order for chronological display)
+        for i in range(6, -1, -1):  # 6, 5, 4, 3, 2, 1, 0
+            date = datetime.now() - timedelta(days=i)
+            day_sessions = sessions.filter(created_at__date=date.date())
+            
+            ocr_count = day_sessions.filter(learning_type='image_ocr').count()
+            tts_count = day_sessions.filter(learning_type='text_input').count()
+            translation_count = day_sessions.filter(learning_type='practice').count()
+            
+            ocr_data.append(ocr_count)
+            tts_data.append(tts_count)
+            translation_data.append(translation_count)
+        
+        # Convert to comma-separated strings for JavaScript
+        return {
+            'ocr_sessions': ','.join(map(str, ocr_data)),
+            'tts_sessions': ','.join(map(str, tts_data)),
+            'translation_sessions': ','.join(map(str, translation_data))
+        }
+    
+    def _get_feature_usage(self, sessions):
+        """Calculate feature usage percentages"""
+        if not sessions.exists():
+            return {'ocr': 45, 'tts': 30, 'translation': 15, 'dictionary': 10}
+        
+        total = sessions.count()
+        ocr_count = sessions.filter(learning_type='image_ocr').count()
+        tts_count = sessions.filter(learning_type='text_input').count()
+        translation_count = sessions.filter(learning_type='practice').count()
+        dictionary_count = sessions.filter(is_single_word=True).count()
+        
+        return {
+            'ocr': round((ocr_count / total) * 100) if total > 0 else 0,
+            'tts': round((tts_count / total) * 100) if total > 0 else 0,
+            'translation': round((translation_count / total) * 100) if total > 0 else 0,
+            'dictionary': round((dictionary_count / total) * 100) if total > 0 else 0,
+        }
 
 class UploadView(LoginRequiredMixin, View):
     """Display upload form for authenticated users"""

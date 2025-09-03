@@ -5,10 +5,10 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-8 mx-auto">
+    <div class="col-12">
         <!-- Upload Form Card -->
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header text-white" style="background: var(--gradient-primary);">
                 <h3 class="card-title mb-0">
                     <i class="bi bi-cloud-upload"></i>
                     Upload Image for OCR Processing
@@ -48,7 +48,7 @@
                     </div>
                     
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-lg" style="background: var(--gradient-primary); color: white; border: none;">
                             <i class="bi bi-upload"></i>
                             Upload & Process Image
                         </button>
@@ -74,7 +74,7 @@
         <!-- Recent Sessions -->
         {% if recent_sessions %}
         <div class="card shadow-sm mt-4">
-            <div class="card-header">
+            <div class="card-header text-white" style="background: var(--gradient-secondary);">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-clock-history"></i>
                     Recent Processing Sessions
@@ -106,6 +106,46 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Features Overview (Directory) -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card border-primary h-100 text-center p-3">
+                    <div class="text-primary" style="font-size: 2rem;">
+                        <i class="bi bi-image"></i>
+                    </div>
+                    <h6 class="card-title mt-2">Image OCR</h6>
+                    <p class="card-text small">Extract text from images using advanced OCR technology.</p>
+                    <div class="d-grid">
+                        <span class="btn btn-sm" style="background: var(--gradient-primary); color: white; border: none; cursor: default;">Current Page</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-info h-100 text-center p-3">
+                    <div class="text-info" style="font-size: 2rem;">
+                        <i class="bi bi-mic"></i>
+                    </div>
+                    <h6 class="card-title mt-2">Text to Speech</h6>
+                    <p class="card-text small">Convert any text to natural-sounding audio.</p>
+                    <div class="d-grid">
+                        <a href="{% url 'text_to_speech' %}" class="btn btn-outline-info btn-sm">Try TTS</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-secondary h-100 text-center p-3">
+                    <div class="text-secondary" style="font-size: 2rem;">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                    <h6 class="card-title mt-2">Full Pipeline</h6>
+                    <p class="card-text small">Complete OCR + TTS processing workflow.</p>
+                    <div class="d-grid">
+                        <a href="{% url 'session_list' %}" class="btn btn-outline-secondary btn-sm">View History</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

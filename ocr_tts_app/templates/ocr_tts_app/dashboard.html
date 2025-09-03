@@ -7,16 +7,16 @@
 <!-- Welcome Section -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card bg-gradient-primary text-white shadow">
+        <div class="card text-white shadow" style="background: var(--gradient-primary);">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h2 class="mb-1">
-                            <i class="bi bi-speedometer2"></i>
-                            Welcome back, {{ user.first_name|default:user.username }}!
+                            <i class="bi bi-mortarboard-fill"></i>
+                            Welcome back to <span class="gradient-text-light">Learnify</span>, {{ user.first_name|default:user.username }}!
                         </h2>
                         <p class="mb-3 opacity-75">
-                            Continue your language learning journey with OCR and TTS technology.
+                            Continue your AI-powered language learning journey with advanced OCR, TTS, and Translation.
                         </p>
                         <div class="d-flex gap-2">
                             <a href="{% url 'upload_form' %}" class="btn btn-light btn-sm">
@@ -41,49 +41,90 @@
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-md-3 mb-3">
-        <div class="card border-primary h-100">
+        <div class="stats-card card h-100" style="background: var(--gradient-primary); color: white;">
             <div class="card-body text-center">
-                <div class="text-primary mb-2">
-                    <i class="bi bi-collection" style="font-size: 2rem;"></i>
+                <div class="mb-2">
+                    <i class="bi bi-collection" style="font-size: 2.5rem;"></i>
                 </div>
-                <h4 class="text-primary">{{ stats.total_sessions }}</h4>
-                <p class="card-text small text-muted mb-0">Total Sessions</p>
+                <h3 class="fw-bold">{{ stats.total_sessions }}</h3>
+                <p class="card-text small mb-0 opacity-75">Total Sessions</p>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 mb-3">
-        <div class="card border-success h-100">
+        <div class="stats-card card h-100" style="background: var(--gradient-success); color: white;">
             <div class="card-body text-center">
-                <div class="text-success mb-2">
-                    <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                <div class="mb-2">
+                    <i class="bi bi-check-circle" style="font-size: 2.5rem;"></i>
                 </div>
-                <h4 class="text-success">{{ stats.completed_sessions }}</h4>
-                <p class="card-text small text-muted mb-0">Completed</p>
+                <h3 class="fw-bold">{{ stats.completed_sessions }}</h3>
+                <p class="card-text small mb-0 opacity-75">Completed</p>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 mb-3">
-        <div class="card border-warning h-100">
+        <div class="stats-card card h-100" style="background: var(--gradient-warning); color: white;">
             <div class="card-body text-center">
-                <div class="text-warning mb-2">
-                    <i class="bi bi-heart-fill" style="font-size: 2rem;"></i>
+                <div class="mb-2">
+                    <i class="bi bi-heart-fill" style="font-size: 2.5rem;"></i>
                 </div>
-                <h4 class="text-warning">{{ stats.favorite_count }}</h4>
-                <p class="card-text small text-muted mb-0">Favorites</p>
+                <h3 class="fw-bold">{{ stats.favorite_count }}</h3>
+                <p class="card-text small mb-0 opacity-75">Favorites</p>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 mb-3">
-        <div class="card border-info h-100">
+        <div class="stats-card card h-100" style="background: var(--gradient-info); color: white;">
             <div class="card-body text-center">
-                <div class="text-info mb-2">
-                    <i class="bi bi-calendar-week" style="font-size: 2rem;"></i>
+                <div class="mb-2">
+                    <i class="bi bi-calendar-week" style="font-size: 2.5rem;"></i>
                 </div>
-                <h4 class="text-info">{{ stats.recent_count }}</h4>
-                <p class="card-text small text-muted mb-0">This Week</p>
+                <h3 class="fw-bold">{{ stats.recent_count }}</h3>
+                <p class="card-text small mb-0 opacity-75">This Week</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Analytics Charts -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bar-chart-line"></i>
+                    Learning Progress Analytics
+                </h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="chartPeriod" id="week" value="7" checked>
+                    <label class="btn btn-outline-primary" for="week">7D</label>
+                    
+                    <input type="radio" class="btn-check" name="chartPeriod" id="month" value="30">
+                    <label class="btn btn-outline-primary" for="month">30D</label>
+                    
+                    <input type="radio" class="btn-check" name="chartPeriod" id="all" value="all">
+                    <label class="btn btn-outline-primary" for="all">All</label>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="progressChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-pie-chart-fill"></i>
+                    Feature Usage
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="featureChart" width="300" height="300"></canvas>
             </div>
         </div>
     </div>
@@ -307,8 +348,242 @@
 
 {% block extra_css %}
 <style>
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+.gradient-text-light {
+    background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.feature-usage-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.feature-usage-item:last-child {
+    border-bottom: none;
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Progress Chart Data (Mock data - replace with real data from Django context)
+    const progressData = {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [
+            {
+                label: 'OCR Sessions',
+                data: [{{ chart_data.ocr_sessions|default:"3,5,2,8,4,6,7"|safe }}],
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'TTS Sessions',
+                data: [{{ chart_data.tts_sessions|default:"2,3,4,6,3,5,4"|safe }}],
+                backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                borderColor: 'rgba(79, 172, 254, 1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'Translations',
+                data: [{{ chart_data.translation_sessions|default:"1,2,3,4,2,3,5"|safe }}],
+                backgroundColor: 'rgba(250, 112, 154, 0.1)',
+                borderColor: 'rgba(250, 112, 154, 1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }
+        ]
+    };
+
+    // Progress Chart Configuration
+    const progressConfig = {
+        type: 'line',
+        data: progressData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        font: {
+                            family: 'Inter',
+                            weight: '500'
+                        }
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#333',
+                    bodyColor: '#666',
+                    borderColor: 'rgba(102, 126, 234, 0.2)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    titleFont: {
+                        family: 'Inter',
+                        weight: '600'
+                    },
+                    bodyFont: {
+                        family: 'Inter',
+                        weight: '500'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            family: 'Inter',
+                            weight: '500'
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    },
+                    ticks: {
+                        font: {
+                            family: 'Inter',
+                            weight: '500'
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    };
+
+    // Feature Usage Chart Data
+    const featureData = {
+        labels: ['OCR Processing', 'Text-to-Speech', 'Translation', 'Dictionary'],
+        datasets: [{
+            data: [{{ feature_usage.ocr|default:"45" }}, {{ feature_usage.tts|default:"30" }}, {{ feature_usage.translation|default:"15" }}, {{ feature_usage.dictionary|default:"10" }}],
+            backgroundColor: [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(79, 172, 254, 0.8)',
+                'rgba(250, 112, 154, 0.8)',
+                'rgba(67, 233, 123, 0.8)'
+            ],
+            borderColor: [
+                'rgba(102, 126, 234, 1)',
+                'rgba(79, 172, 254, 1)',
+                'rgba(250, 112, 154, 1)',
+                'rgba(67, 233, 123, 1)'
+            ],
+            borderWidth: 2
+        }]
+    };
+
+    // Feature Chart Configuration
+    const featureConfig = {
+        type: 'doughnut',
+        data: featureData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: {
+                            family: 'Inter',
+                            weight: '500',
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#333',
+                    bodyColor: '#666',
+                    borderColor: 'rgba(102, 126, 234, 0.2)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    titleFont: {
+                        family: 'Inter',
+                        weight: '600'
+                    },
+                    bodyFont: {
+                        family: 'Inter',
+                        weight: '500'
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed + '%';
+                        }
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    };
+
+    // Initialize Charts
+    const progressCtx = document.getElementById('progressChart').getContext('2d');
+    const featureCtx = document.getElementById('featureChart').getContext('2d');
+    
+    const progressChart = new Chart(progressCtx, progressConfig);
+    const featureChart = new Chart(featureCtx, featureConfig);
+
+    // Chart Period Toggle
+    document.querySelectorAll('input[name="chartPeriod"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // This would typically fetch new data from the server
+            // For now, we'll just update with mock data
+            if (this.value === '7') {
+                progressChart.data.labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                progressChart.data.datasets[0].data = [3,5,2,8,4,6,7];
+                progressChart.data.datasets[1].data = [2,3,4,6,3,5,4];
+                progressChart.data.datasets[2].data = [1,2,3,4,2,3,5];
+            } else if (this.value === '30') {
+                progressChart.data.labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                progressChart.data.datasets[0].data = [15,22,18,25];
+                progressChart.data.datasets[1].data = [12,18,15,20];
+                progressChart.data.datasets[2].data = [8,12,10,15];
+            } else {
+                progressChart.data.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                progressChart.data.datasets[0].data = [45,52,48,65,58,72];
+                progressChart.data.datasets[1].data = [35,42,38,50,45,55];
+                progressChart.data.datasets[2].data = [25,30,28,35,32,40];
+            }
+            progressChart.update('active');
+        });
+    });
+
+    // Add smooth animations
+    Chart.defaults.animation.duration = 1000;
+    Chart.defaults.animation.easing = 'easeInOutQuart';
+});
+</script>
 {% endblock %}

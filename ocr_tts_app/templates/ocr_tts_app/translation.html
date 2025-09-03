@@ -5,13 +5,13 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-10 mx-auto">
+    <div class="col-12">
         <!-- Translation Card -->
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header text-white" style="background: var(--gradient-success);">
                 <h3 class="card-title mb-0">
                     <i class="bi bi-translate"></i>
-                    Multilingual Translator
+                    <span class="gradient-text-light">Learnify</span> Translator
                 </h3>
             </div>
             <div class="card-body">
@@ -459,4 +459,16 @@
     // Initial setup
     updateCharCount();
 </script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.gradient-text-light {
+    background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+</style>
 {% endblock %}

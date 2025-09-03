@@ -1,21 +1,21 @@
 {% extends 'ocr_tts_app/base.html' %}
 {% load static %}
 
-{% block title %}{{ platform_name }} - Learn Languages with AI{% endblock %}
+{% block title %}Learnify - AI-Powered Language Learning Platform{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
 <div class="row mb-5">
     <div class="col-12">
-        <div class="jumbotron bg-primary text-white text-center py-5 rounded">
+        <div class="jumbotron text-white text-center py-5 rounded" style="background: var(--gradient-primary);">
             <div class="container">
                 <h1 class="display-4 mb-3">
-                    <i class="bi bi-translate"></i>
-                    {{ platform_name }}
+                    <i class="bi bi-mortarboard-fill"></i>
+                    <span class="gradient-text-light">Learnify</span>
                 </h1>
                 <p class="lead mb-4">
-                    Transform your language learning with cutting-edge OCR and Text-to-Speech technology. 
-                    Upload images, extract text, and convert to natural speech - all powered by AI.
+                    Transform your language learning with cutting-edge AI technology. 
+                    Upload images, extract text, translate content, and convert to natural speech - all powered by advanced machine learning.
                 </p>
                 <div class="d-flex gap-3 justify-content-center">
                     <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg">
@@ -38,12 +38,12 @@
     </div>
     
     <div class="col-md-4 mb-4">
-        <div class="card h-100 border-primary shadow-sm">
+        <div class="card h-100 shadow-sm" style="border: 2px solid transparent; background: linear-gradient(white, white) padding-box, var(--gradient-primary) border-box;">
             <div class="card-body text-center p-4">
                 <div class="text-primary mb-3">
                     <i class="bi bi-image" style="font-size: 3rem;"></i>
                 </div>
-                <h5 class="card-title text-primary">Smart OCR Technology</h5>
+                <h5 class="card-title" style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Smart OCR Technology</h5>
                 <p class="card-text">
                     Upload images with handwritten or printed text and extract content with 
                     state-of-the-art TrOCR technology. Works with multiple languages and fonts.
@@ -58,12 +58,12 @@
     </div>
     
     <div class="col-md-4 mb-4">
-        <div class="card h-100 border-success shadow-sm">
+        <div class="card h-100 shadow-sm" style="border: 2px solid transparent; background: linear-gradient(white, white) padding-box, var(--gradient-success) border-box;">
             <div class="card-body text-center p-4">
                 <div class="text-success mb-3">
                     <i class="bi bi-mic" style="font-size: 3rem;"></i>
                 </div>
-                <h5 class="card-title text-success">Natural Text-to-Speech</h5>
+                <h5 class="card-title" style="background: var(--gradient-success); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Natural Text-to-Speech</h5>
                 <p class="card-text">
                     Convert extracted text to natural-sounding speech with advanced TTS models. 
                     Choose from different voices and speaking styles.
@@ -78,14 +78,14 @@
     </div>
     
     <div class="col-md-4 mb-4">
-        <div class="card h-100 border-info shadow-sm">
+        <div class="card h-100 shadow-sm" style="border: 2px solid transparent; background: linear-gradient(white, white) padding-box, var(--gradient-info) border-box;">
             <div class="card-body text-center p-4">
                 <div class="text-info mb-3">
                     <i class="bi bi-graph-up" style="font-size: 3rem;"></i>
                 </div>
-                <h5 class="card-title text-info">Progress Tracking</h5>
+                <h5 class="card-title" style="background: var(--gradient-info); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Progress Tracking</h5>
                 <p class="card-text">
-                    Monitor your learning journey with detailed statistics, session history, 
+                    Monitor your learning journey with detailed analytics charts, session history, 
                     and personal achievements to stay motivated.
                 </p>
                 <ul class="list-unstyled text-start">
@@ -191,19 +191,49 @@
 
 {% block extra_css %}
 <style>
-.jumbotron {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+.gradient-text-light {
+    background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
 .badge.bg-outline-primary {
     background-color: transparent !important;
-    border: 1px solid #007bff;
-    color: #007bff;
+    border: 1px solid #667eea;
+    color: #667eea;
+    font-weight: 500;
 }
 
-.card:hover {
-    transform: translateY(-5px);
-    transition: transform 0.3s ease;
+.step-number {
+    background: var(--gradient-primary);
+    width: 60px;
+    height: 60px;
+    display: inline-flex;
+    align-items: center;
+    justify-content-center;
+    border-radius: 50%;
+    color: white;
+    font-weight: 700;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.cta-section {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius);
 }
 </style>
 {% endblock %}
