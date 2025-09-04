@@ -10,6 +10,9 @@ from django.views import View
 from django.core.files.storage import default_storage
 from django.db.models import Count, Q
 from datetime import datetime, timedelta
+from django.utils import timezone
+import json
+from django.utils.safestring import mark_safe
 import os
 import sys
 import time
@@ -98,7 +101,7 @@ class DashboardView(LoginRequiredMixin, View):
         favorite_sessions = sessions.filter(is_favorited=True)
         
         # Recent activity (last 7 days)
-        week_ago = datetime.now() - timedelta(days=7)
+        week_ago = timezone.now() - timedelta(days=7)
         recent_sessions = sessions.filter(created_at__gte=week_ago)
         
         # Group sessions by learning type
@@ -135,50 +138,49 @@ class DashboardView(LoginRequiredMixin, View):
         return render(request, 'ocr_tts_app/dashboard.html', context)
     
     def _get_chart_data(self, user, sessions):
-        """Generate chart data for the last 7 days"""
-        from datetime import datetime, timedelta
-        
+        """Generate chart data for the last 7 days (timezone-aware)"""
         # Initialize data arrays
+        labels = []
         ocr_data = []              # image_ocr
         tts_data = []              # text_input (direct TTS)
-        translation_data = []      # practice (used here as translation proxy)
-        
-        # Get last 7 days of data (in reverse order for chronological display)
+
+        # Use local date for the user's timezone
+        today_local = timezone.localdate()
+
+        # Build last 7 days labels and counts (chronological)
         for i in range(6, -1, -1):  # 6, 5, 4, 3, 2, 1, 0
-            date = datetime.now() - timedelta(days=i)
-            day_sessions = sessions.filter(created_at__date=date.date())
-            
+            day = today_local - timedelta(days=i)
+            labels.append(day.strftime('%d/%m'))
+            day_sessions = sessions.filter(created_at__date=day)
+
             ocr_count = day_sessions.filter(learning_type='image_ocr').count()
             tts_count = day_sessions.filter(learning_type='text_input').count()
-            translation_count = day_sessions.filter(learning_type='practice').count()
-            
             ocr_data.append(ocr_count)
             tts_data.append(tts_count)
-            translation_data.append(translation_count)
-        
-        # Convert to comma-separated strings for JavaScript
+
+        # Prepare JS-friendly JSON arrays
         return {
-            'ocr_sessions': ','.join(map(str, ocr_data)),
-            'tts_sessions': ','.join(map(str, tts_data)),
-            'translation_sessions': ','.join(map(str, translation_data))
+            'labels': mark_safe(json.dumps(labels)),
+            'ocr_sessions': mark_safe(json.dumps(ocr_data)),
+            'tts_sessions': mark_safe(json.dumps(tts_data))
         }
     
     def _get_feature_usage(self, sessions):
-        """Calculate feature usage percentages"""
+        """Calculate feature usage percentages (OCR, TTS, Dictionary). Translation removed."""
         if not sessions.exists():
-            return {'ocr': 45, 'tts': 30, 'translation': 15, 'dictionary': 10}
+            return {'ocr': 0, 'tts': 0, 'dictionary': 0}
         
         total = sessions.count()
         ocr_count = sessions.filter(learning_type='image_ocr').count()
         tts_count = sessions.filter(learning_type='text_input').count()
-        translation_count = sessions.filter(learning_type='practice').count()
         dictionary_count = sessions.filter(is_single_word=True).count()
         
+        # Normalize to percentages (exclude translation from distribution)
+        denom = total if total > 0 else 1
         return {
-            'ocr': round((ocr_count / total) * 100) if total > 0 else 0,
-            'tts': round((tts_count / total) * 100) if total > 0 else 0,
-            'translation': round((translation_count / total) * 100) if total > 0 else 0,
-            'dictionary': round((dictionary_count / total) * 100) if total > 0 else 0,
+            'ocr': round((ocr_count / denom) * 100),
+            'tts': round((tts_count / denom) * 100),
+            'dictionary': round((dictionary_count / denom) * 100),
         }
 
 class UploadView(LoginRequiredMixin, View):
@@ -192,7 +194,7 @@ class UploadView(LoginRequiredMixin, View):
             ocr_status='completed'
         ).order_by('-created_at')[:5]
         
-        return render(request, 'ocr_tts_app/upload.html', {
+        return render(request, 'ocr_tts_app/ocr_upload.html', {
             'form': form,
             'recent_sessions': recent_sessions
         })
@@ -208,7 +210,7 @@ class UploadImageView(LoginRequiredMixin, View):
                 # Check if image file was uploaded
                 if 'uploaded_image' not in request.FILES:
                     messages.error(request, "Please select an image file to upload.")
-                    return render(request, 'ocr_tts_app/upload.html', {'form': form})
+                    return render(request, 'ocr_tts_app/ocr_upload.html', {'form': form})
                 
                 # Create new session associated with user
                 session = LearningHistory.objects.create(
@@ -347,7 +349,7 @@ class UploadImageView(LoginRequiredMixin, View):
             ocr_status='completed'
         ).order_by('-created_at')[:5]
         
-        return render(request, 'ocr_tts_app/upload.html', {
+        return render(request, 'ocr_tts_app/ocr_upload.html', {
             'form': form,
             'recent_sessions': recent_sessions
         })

@@ -90,41 +90,81 @@
 </div>
 
 <!-- Interactive Analytics Charts -->
-<div class="row mb-4">
+<div class="row mb-2">
     <div class="col-lg-8 mb-4">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-bar-chart-line"></i>
-                    Learning Progress Analytics
+                    OCR Sessions (Last 7 Days)
                 </h5>
-                <div class="btn-group btn-group-sm" role="group">
-                    <input type="radio" class="btn-check" name="chartPeriod" id="week" value="7" checked>
-                    <label class="btn btn-outline-primary" for="week">7D</label>
-                    
-                    <input type="radio" class="btn-check" name="chartPeriod" id="month" value="30">
-                    <label class="btn btn-outline-primary" for="month">30D</label>
-                    
-                    <input type="radio" class="btn-check" name="chartPeriod" id="all" value="all">
-                    <label class="btn btn-outline-primary" for="all">All</label>
-                </div>
             </div>
-            <div class="card-body">
-                <canvas id="progressChart" width="400" height="200"></canvas>
+            <div class="card-body analytics-fixed-height">
+                <canvas id="ocrChart" class="canvas-fill"></canvas>
+            </div>
+        </div>
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bar-chart-line"></i>
+                    TTS Sessions (Last 7 Days)
+                </h5>
+            </div>
+            <div class="card-body analytics-fixed-height">
+                <canvas id="ttsChart" class="canvas-fill"></canvas>
             </div>
         </div>
     </div>
     
     <div class="col-lg-4 mb-4">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-pie-chart-fill"></i>
                     Feature Usage
                 </h5>
             </div>
-            <div class="card-body">
-                <canvas id="featureChart" width="300" height="300"></canvas>
+            <div class="card-body analytics-fixed-height">
+                <canvas id="featureChart" class="canvas-fill"></canvas>
+            </div>
+        </div>
+
+        <!-- Profile Overview stacked right under Feature Usage -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-person-circle"></i>
+                    Profile Overview
+                </h6>
+            </div>
+            <div class="card-body analytics-fixed-height">
+                <div class="text-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="h4 mb-0">{{ user.first_name.0|default:user.username.0|upper }}</span>
+                    </div>
+                    <h6 class="mt-2 mb-1">{{ user.get_full_name|default:user.username }}</h6>
+                    <small class="text-muted">{{ user.email }}</small>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="text-primary">{{ profile.learning_streak }}</div>
+                        <small class="text-muted">Streak</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-success">{{ profile.total_words_learned }}</div>
+                        <small class="text-muted">Words</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-info">{{ profile.get_target_language_display }}</div>
+                        <small class="text-muted">Language</small>
+                    </div>
+                </div>
+                <div class="d-grid mt-3">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-gear"></i> Edit Profile
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -211,47 +251,6 @@
     
     <!-- Profile & Quick Actions Sidebar -->
     <div class="col-lg-4">
-        <!-- Profile Card -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-info text-white">
-                <h6 class="card-title mb-0">
-                    <i class="bi bi-person-circle"></i>
-                    Profile Overview
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="text-center mb-3">
-                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                        <span class="h4 mb-0">{{ user.first_name.0|default:user.username.0|upper }}</span>
-                    </div>
-                    <h6 class="mt-2 mb-1">{{ user.get_full_name|default:user.username }}</h6>
-                    <small class="text-muted">{{ user.email }}</small>
-                </div>
-                
-                <hr>
-                
-                <div class="row text-center">
-                    <div class="col-4">
-                        <div class="text-primary">{{ profile.learning_streak }}</div>
-                        <small class="text-muted">Streak</small>
-                    </div>
-                    <div class="col-4">
-                        <div class="text-success">{{ profile.total_words_learned }}</div>
-                        <small class="text-muted">Words</small>
-                    </div>
-                    <div class="col-4">
-                        <div class="text-info">{{ profile.get_target_language_display }}</div>
-                        <small class="text-muted">Language</small>
-                    </div>
-                </div>
-                
-                <div class="d-grid mt-3">
-                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-info btn-sm">
-                        <i class="bi bi-gear"></i> Edit Profile
-                    </a>
-                </div>
-            </div>
-        </div>
         
         <!-- Learning Types Distribution -->
         {% if session_types %}
@@ -372,6 +371,16 @@
 .feature-usage-item:last-child {
     border-bottom: none;
 }
+
+/* Ensure analytics cards on both columns align in height */
+.analytics-fixed-height {
+    min-height: 290px;
+}
+
+.canvas-fill {
+    width: 100% !important;
+    height: 220px !important;
+}
 </style>
 {% endblock %}
 
@@ -379,124 +388,53 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Progress Chart Data (Mock data - replace with real data from Django context)
-    const progressData = {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [
-            {
-                label: 'OCR Sessions',
-                data: [{{ chart_data.ocr_sessions|default:"3,5,2,8,4,6,7"|safe }}],
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                borderColor: 'rgba(102, 126, 234, 1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4
-            },
-            {
-                label: 'TTS Sessions',
-                data: [{{ chart_data.tts_sessions|default:"2,3,4,6,3,5,4"|safe }}],
-                backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                borderColor: 'rgba(79, 172, 254, 1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4
-            },
-            {
-                label: 'Translations',
-                data: [{{ chart_data.translation_sessions|default:"1,2,3,4,2,3,5"|safe }}],
-                backgroundColor: 'rgba(250, 112, 154, 0.1)',
-                borderColor: 'rgba(250, 112, 154, 1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4
-            }
-        ]
+    const ocrData = {
+        labels: {{ chart_data.labels|safe }},
+        datasets: [{
+            label: 'OCR Sessions',
+            data: {{ chart_data.ocr_sessions|safe }},
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
     };
 
-    // Progress Chart Configuration
-    const progressConfig = {
-        type: 'line',
-        data: progressData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        font: {
-                            family: 'Inter',
-                            weight: '500'
-                        }
-                    }
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    titleColor: '#333',
-                    bodyColor: '#666',
-                    borderColor: 'rgba(102, 126, 234, 0.2)',
-                    borderWidth: 1,
-                    cornerRadius: 8,
-                    titleFont: {
-                        family: 'Inter',
-                        weight: '600'
-                    },
-                    bodyFont: {
-                        family: 'Inter',
-                        weight: '500'
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: {
-                            family: 'Inter',
-                            weight: '500'
-                        }
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    },
-                    ticks: {
-                        font: {
-                            family: 'Inter',
-                            weight: '500'
-                        }
-                    }
-                }
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
-            }
+    const ttsData = {
+        labels: {{ chart_data.labels|safe }},
+        datasets: [{
+            label: 'TTS Sessions',
+            data: {{ chart_data.tts_sessions|safe }},
+            backgroundColor: 'rgba(79, 172, 254, 0.1)',
+            borderColor: 'rgba(79, 172, 254, 1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    };
+
+    const lineOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true }
         }
     };
 
     // Feature Usage Chart Data
     const featureData = {
-        labels: ['OCR Processing', 'Text-to-Speech', 'Translation', 'Dictionary'],
+        labels: ['OCR Processing', 'Text-to-Speech', 'Dictionary'],
         datasets: [{
-            data: [{{ feature_usage.ocr|default:"45" }}, {{ feature_usage.tts|default:"30" }}, {{ feature_usage.translation|default:"15" }}, {{ feature_usage.dictionary|default:"10" }}],
+            data: [{{ feature_usage.ocr }}, {{ feature_usage.tts }}, {{ feature_usage.dictionary }}],
             backgroundColor: [
                 'rgba(102, 126, 234, 0.8)',
                 'rgba(79, 172, 254, 0.8)',
-                'rgba(250, 112, 154, 0.8)',
                 'rgba(67, 233, 123, 0.8)'
             ],
             borderColor: [
                 'rgba(102, 126, 234, 1)',
                 'rgba(79, 172, 254, 1)',
-                'rgba(250, 112, 154, 1)',
                 'rgba(67, 233, 123, 1)'
             ],
             borderWidth: 2
@@ -550,40 +488,18 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Initialize Charts
-    const progressCtx = document.getElementById('progressChart').getContext('2d');
+    const ocrCtx = document.getElementById('ocrChart').getContext('2d');
+    const ttsCtx = document.getElementById('ttsChart').getContext('2d');
     const featureCtx = document.getElementById('featureChart').getContext('2d');
     
-    const progressChart = new Chart(progressCtx, progressConfig);
+    const ocrChart = new Chart(ocrCtx, { type: 'line', data: ocrData, options: lineOptions });
+    const ttsChart = new Chart(ttsCtx, { type: 'line', data: ttsData, options: lineOptions });
     const featureChart = new Chart(featureCtx, featureConfig);
 
-    // Chart Period Toggle
-    document.querySelectorAll('input[name="chartPeriod"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            // This would typically fetch new data from the server
-            // For now, we'll just update with mock data
-            if (this.value === '7') {
-                progressChart.data.labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                progressChart.data.datasets[0].data = [3,5,2,8,4,6,7];
-                progressChart.data.datasets[1].data = [2,3,4,6,3,5,4];
-                progressChart.data.datasets[2].data = [1,2,3,4,2,3,5];
-            } else if (this.value === '30') {
-                progressChart.data.labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                progressChart.data.datasets[0].data = [15,22,18,25];
-                progressChart.data.datasets[1].data = [12,18,15,20];
-                progressChart.data.datasets[2].data = [8,12,10,15];
-            } else {
-                progressChart.data.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-                progressChart.data.datasets[0].data = [45,52,48,65,58,72];
-                progressChart.data.datasets[1].data = [35,42,38,50,45,55];
-                progressChart.data.datasets[2].data = [25,30,28,35,32,40];
-            }
-            progressChart.update('active');
-        });
-    });
+    // Period toggle disabled (server provides week data). If needed, implement AJAX to fetch other ranges.
 
     // Add smooth animations
-    Chart.defaults.animation.duration = 1000;
-    Chart.defaults.animation.easing = 'easeInOutQuart';
+    Chart.defaults.animation = { duration: 800, easing: 'easeInOutQuart' };
 });
 </script>
 {% endblock %}

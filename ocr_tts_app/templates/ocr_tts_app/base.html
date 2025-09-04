@@ -249,7 +249,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'upload_form' %}">
-                                <i class="bi bi-cloud-upload"></i> Upload
+                                <i class="bi bi-eyeglasses"></i> OCR
                             </a>
                         </li>
                         <li class="nav-item">
@@ -296,12 +296,12 @@
                             </ul>
                         </li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:login' %}">
+                        <li class="nav-item d-flex align-items-center">
+                            <a class="nav-link btn btn-outline-light" href="{% url 'accounts:login' %}">
                                 <i class="bi bi-box-arrow-in-right"></i> Login
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item d-flex align-items-center">
                             <a class="nav-link btn btn-outline-light ms-2" href="{% url 'accounts:register' %}">
                                 <i class="bi bi-person-plus"></i> Sign Up
                             </a>

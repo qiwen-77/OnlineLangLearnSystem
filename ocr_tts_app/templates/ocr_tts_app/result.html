@@ -23,10 +23,14 @@
                         <p><strong>Learning Type:</strong> {{ session.get_learning_type_display }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>OCR Status:</strong> 
-                            <span class="badge bg-{% if session.ocr_status == 'completed' %}success{% elif session.ocr_status == 'failed' %}danger{% elif session.ocr_status == 'processing' %}warning{% else %}secondary{% endif %}">
-                                {{ session.get_ocr_status_display }}
-                            </span>
+                        <p><strong>OCR Status:</strong>
+                            {% if session.learning_type == 'text_input' %}
+                                <span class="badge bg-secondary">Not used</span>
+                            {% else %}
+                                <span class="badge bg-{% if session.ocr_status == 'completed' %}success{% elif session.ocr_status == 'failed' %}danger{% elif session.ocr_status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                    {{ session.get_ocr_status_display }}
+                                </span>
+                            {% endif %}
                         </p>
                         <p><strong>TTS Status:</strong> 
                             <span class="badge bg-{% if session.tts_status == 'completed' %}success{% elif session.tts_status == 'failed' %}danger{% elif session.tts_status == 'processing' %}warning{% else %}secondary{% endif %}">
@@ -64,19 +68,33 @@
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-text-paragraph"></i>
-                    Extracted Text (OCR Results)
+                    {% if session.learning_type == 'image_ocr' %}
+                        Extracted Text (OCR Results)
+                    {% else %}
+                        Input Text (Text-to-Speech)
+                    {% endif %}
                 </h5>
             </div>
             <div class="card-body">
-                {% if session.ocr_status == 'completed' and session.extracted_text %}
+                {% if session.extracted_text %}
                     <div class="mb-3">
                         <label for="extractedText" class="form-label">
-                            <strong>Recognized Text:</strong>
+                            <strong>
+                                {% if session.learning_type == 'image_ocr' %}
+                                    Recognized Text:
+                                {% else %}
+                                    Provided Text:
+                                {% endif %}
+                            </strong>
                             <small class="text-muted">({{ session.word_count|default:0 }} words)</small>
                         </label>
                         <textarea id="extractedText" class="form-control" rows="6" readonly>{{ session.extracted_text }}</textarea>
                         <div class="form-text">
-                            ✅ Text successfully decoded from image using OCR
+                            {% if session.learning_type == 'image_ocr' %}
+                                ✅ Text successfully decoded from image using OCR
+                            {% else %}
+                                ✍️ Text provided directly for Text-to-Speech
+                            {% endif %}
                         </div>
                     </div>
                     <div class="d-flex gap-2">
@@ -87,29 +105,31 @@
                             <i class="bi bi-download"></i> Export Learning Note
                         </a>
                     </div>
-                {% elif session.ocr_status == 'processing' %}
+                {% elif session.learning_type == 'image_ocr' and session.ocr_status == 'processing' %}
                     <div class="text-center">
                         <div class="spinner-border text-warning" role="status">
                             <span class="visually-hidden">Processing...</span>
                         </div>
                         <p class="mt-2">OCR processing in progress...</p>
                     </div>
-                {% elif session.ocr_status == 'failed' %}
+                {% elif session.learning_type == 'image_ocr' and session.ocr_status == 'failed' %}
                     <div class="alert alert-danger">
                         <i class="bi bi-exclamation-triangle"></i>
                         <strong>OCR Processing Failed:</strong> {{ session.ocr_error }}
                     </div>
                 {% else %}
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        OCR processing has not started yet.
-                    </div>
+                    {% if session.learning_type == 'image_ocr' %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            OCR processing has not started yet.
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
 
         <!-- Dictionary Lookup Results -->
-        {% if session.is_single_word %}
+        {% if session.learning_type == 'image_ocr' and session.is_single_word %}
         <div class="card shadow-sm mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">

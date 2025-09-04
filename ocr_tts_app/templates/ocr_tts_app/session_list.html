@@ -63,9 +63,13 @@
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <small><strong>OCR:</strong></small>
-                                    <span class="badge bg-{% if session.ocr_status == 'completed' %}success{% elif session.ocr_status == 'failed' %}danger{% elif session.ocr_status == 'processing' %}warning{% else %}secondary{% endif %}">
-                                        {{ session.get_ocr_status_display }}
-                                    </span>
+                                    {% if session.learning_type == 'text_input' %}
+                                        <span class="badge bg-secondary">Not used</span>
+                                    {% else %}
+                                        <span class="badge bg-{% if session.ocr_status == 'completed' %}success{% elif session.ocr_status == 'failed' %}danger{% elif session.ocr_status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                            {{ session.get_ocr_status_display }}
+                                        </span>
+                                    {% endif %}
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small><strong>TTS:</strong></small>
