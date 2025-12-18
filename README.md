@@ -16,6 +16,15 @@ A comprehensive Django web application for language learning powered by **OCR (O
 - **Voice Options**: Male/female voice selection with CMU Arctic speaker embeddings
 - **Multilingual Translation**: English ↔ Chinese ↔ Malay using M2M100 model
 - **Dictionary Lookup**: Automatic word definitions with Free Dictionary API + NLTK WordNet fallback
+- **AI Tutor (RAG)**: Ask natural-language questions about extracted text and get contextual explanations using embeddings, FAISS vector search, and a local LLM
+- **Audio Quality**: Fixed 0.5x speed for optimal clarity and volume enhancement
+### 🧠 AI-Powered Learning
+- **Smart OCR**: Extract text from handwritten or printed images using custom-trained TrOCR models
+- **High-Quality TTS**: Convert text to speech with SpeechT5 + HiFi-GAN vocoder
+- **Voice Options**: Male/female voice selection with CMU Arctic speaker embeddings
+- **Multilingual Translation**: English ↔ Chinese ↔ Malay using M2M100 model
+- **Dictionary Lookup**: Automatic word definitions with Free Dictionary API + NLTK WordNet fallback
+- **AI Tutor (RAG)**: Ask natural-language questions about extracted text and get contextual explanations using embeddings, FAISS vector search, and a local LLM
 - **Audio Quality**: Fixed 0.5x speed for optimal clarity and volume enhancement
 
 ### 📊 Learning Management
