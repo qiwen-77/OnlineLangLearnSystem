@@ -48,6 +48,12 @@ except ImportError as e:
     logger.error(f"❌ Failed to import OCR pipeline: {e}")
     get_ocr_pipeline = None
 
+"""
+Service imports (TTS, Translation, RAG)
+These are loaded with graceful fallbacks so core OCR/TTS/Translation features
+continue to work even if optional services are unavailable.
+"""
+
 # Import services
 sys.path.append(os.path.join(settings.BASE_DIR, 'services'))
 try:
@@ -64,6 +70,15 @@ except ImportError as e:
         logger.error(f"Failed to import fallback modules: {e2}")
         get_tts_service = None
         get_translation_service = None
+
+# Import RAG service (optional, non-fatal if unavailable)
+try:
+    from rag_service import get_rag_service
+    RAG_AVAILABLE = True
+    logger.info("✅ RAG service imported in views")
+except ImportError as e:
+    logger.warning(f"⚠️ RAG service not available in views: {e}")
+    RAG_AVAILABLE = False
 
 class HomeView(View):
     """Home page - public landing page"""
@@ -267,9 +282,24 @@ class UploadImageView(LoginRequiredMixin, View):
                     session.word_count = len(extracted_text.split()) if extracted_text else 0
                     session.processing_time_ocr = round(time.time() - start_ocr, 3)
                     session.save()
-                    
+
                     logger.info(f"✅ OCR completed in {session.processing_time_ocr}s. Extracted {len(extracted_text)} characters")
-                    
+
+                    # Index session for RAG (non-blocking best-effort)
+                    if RAG_AVAILABLE:
+                        try:
+                            rag_service = get_rag_service()
+                            rag_service.index_learning_session(
+                                session_id=session.id,
+                                user=request.user,
+                                extracted_text=session.extracted_text,
+                                word_definitions=session.word_definitions,
+                                is_single_word=session.is_single_word,
+                            )
+                            logger.info("🧠 Session indexed for RAG (session_id=%s)", session.session_id)
+                        except Exception as rag_err:
+                            logger.warning("⚠️ RAG indexing failed for session %s: %s", session.session_id, rag_err)
+
                     # Log dictionary results if available
                     if session.is_single_word and session.word_definitions:
                         logger.info(f"📚 Dictionary lookup found {len(session.word_definitions)} definitions for '{extracted_text}'")
@@ -503,7 +533,22 @@ class TextToSpeechView(LoginRequiredMixin, View):
                 session.ocr_status = 'completed'  # Skip OCR since we have text
                 session.word_count = len(session.extracted_text.split())
                 session.save()
-                
+
+                # Index session for RAG (non-blocking best-effort)
+                if RAG_AVAILABLE:
+                    try:
+                        rag_service = get_rag_service()
+                        rag_service.index_learning_session(
+                            session_id=session.id,
+                            user=request.user,
+                            extracted_text=session.extracted_text,
+                            word_definitions=session.word_definitions if hasattr(session, "word_definitions") else None,
+                            is_single_word=getattr(session, "is_single_word", False),
+                        )
+                        logger.info("🧠 Text-input session indexed for RAG (session_id=%s)", session.session_id)
+                    except Exception as rag_err:
+                        logger.warning("⚠️ RAG indexing failed for text-input session %s: %s", session.session_id, rag_err)
+
                 # Update user profile statistics
                 profile = request.user.profile
                 profile.total_sessions += 1
@@ -729,6 +774,48 @@ class ApiDictionaryView(View):
         except Exception as e:
             logger.exception("/api/dictionary error")
             return JsonResponse({'error': f'Dictionary lookup failed: {str(e)}'}, status=500)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ApiRAGExplainView(LoginRequiredMixin, View):
+    """
+    POST /api/rag/explain/
+    Payload: { "question": str, "session_id": str (optional) }
+    Response: { "answer": str, "sources": [...]} or error
+    """
+
+    def post(self, request):
+        if not RAG_AVAILABLE:
+            return JsonResponse({'error': 'RAG service not available'}, status=503)
+
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            question = (payload.get('question') or '').strip()
+            session_id = payload.get('session_id')
+
+            if not question:
+                return JsonResponse({'error': 'Question is required'}, status=400)
+
+            rag_service = get_rag_service()
+
+            answer, sources = rag_service.answer_question(
+                user=request.user,
+                question=question,
+                session_id=session_id,
+            )
+
+            return JsonResponse(
+                {
+                    'answer': answer,
+                    'sources': sources,
+                }
+            )
+        except ValueError as e:
+            logger.warning(f"/api/rag/explain validation error: {e}")
+            return JsonResponse({'error': str(e)}, status=400)
+        except Exception as e:
+            logger.exception("/api/rag/explain error")
+            return JsonResponse({'error': f'RAG explanation failed: {str(e)}'}, status=500)
 
 class ExportLearningNoteView(LoginRequiredMixin, View):
     """Export learning session as a formatted text file"""

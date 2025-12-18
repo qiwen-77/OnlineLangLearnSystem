@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/tts/', views.ApiTTSView.as_view(), name='api_tts'),
     path('api/translate/', views.ApiTranslateView.as_view(), name='api_translate'),
     path('api/dictionary/', views.ApiDictionaryView.as_view(), name='api_dictionary'),
+    path('api/rag/explain/', views.ApiRAGExplainView.as_view(), name='api_rag_explain'),
 ]

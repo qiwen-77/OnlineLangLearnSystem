@@ -233,6 +233,36 @@
         </div>
         {% endif %}
 
+        <!-- AI Tutor (RAG) Question Box -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0 d-flex align-items-center">
+                    <i class="bi bi-chat-dots me-2"></i>
+                    Ask the AI Tutor about this text
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    Ask a question about the recognized text, vocabulary, or grammar. The AI tutor will use this session,
+                    dictionary info, and your recent learning history to explain.
+                </p>
+                <div class="mb-2">
+                    <label for="ragQuestion" class="form-label"><strong>Your question</strong></label>
+                    <textarea id="ragQuestion" class="form-control" rows="3" placeholder="e.g. Can you explain the grammar in this sentence?"></textarea>
+                </div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <button id="ragAskButton" class="btn btn-outline-primary" type="button" onclick="askRagTutor()">
+                        <i class="bi bi-send"></i> Ask Tutor
+                    </button>
+                    <span id="ragStatus" class="small text-muted"></span>
+                </div>
+                <div id="ragAnswerContainer" class="mt-2" style="display: none;">
+                    <h6><i class="bi bi-lightbulb"></i> Tutor Explanation</h6>
+                    <div id="ragAnswer" class="p-3 bg-light rounded small" style="white-space: pre-wrap;"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- TTS Results -->
         <div class="card shadow-sm mb-4">
             <div class="card-header">
@@ -425,5 +455,57 @@
         location.reload();
     }, 3000); // Refresh every 3 seconds
     {% endif %}
+
+    // RAG / AI Tutor integration
+    function askRagTutor() {
+        const questionInput = document.getElementById('ragQuestion');
+        const statusSpan = document.getElementById('ragStatus');
+        const answerContainer = document.getElementById('ragAnswerContainer');
+        const answerDiv = document.getElementById('ragAnswer');
+        const askButton = document.getElementById('ragAskButton');
+
+        if (!questionInput || !questionInput.value.trim()) {
+            alert('Please enter a question for the tutor.');
+            return;
+        }
+
+        const question = questionInput.value.trim();
+        statusSpan.textContent = 'Thinking...';
+        answerContainer.style.display = 'none';
+        answerDiv.textContent = '';
+        askButton.disabled = true;
+
+        fetch("{% url 'api_rag_explain' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                question: question,
+                session_id: "{{ session.session_id }}"
+            })
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(result => {
+            askButton.disabled = false;
+            if (!result.ok) {
+                const msg = result.data && result.data.error ? result.data.error : 'RAG explanation failed.';
+                statusSpan.textContent = '';
+                alert(msg);
+                return;
+            }
+
+            const answer = result.data.answer || 'No answer returned.';
+            answerDiv.textContent = answer;
+            answerContainer.style.display = 'block';
+            statusSpan.textContent = 'Done.';
+        })
+        .catch(error => {
+            console.error('RAG request failed:', error);
+            statusSpan.textContent = '';
+            askButton.disabled = false;
+            alert('Failed to contact AI tutor. Please try again later.');
+        });
+    }
 </script>
 {% endblock %}
