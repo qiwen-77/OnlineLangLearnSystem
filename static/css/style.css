@@ -15,6 +15,56 @@ body {
     margin-right: 8px;
 }
 
+/* Login and Sign Up Button Alignment */
+.navbar-nav .nav-item {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link i {
+    margin-right: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Sign Up button specific styling */
+.navbar-nav .nav-link.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    margin-left: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+}
+
+.navbar-nav .nav-link.btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Login button styling */
+.navbar-nav .nav-link:not(.btn) {
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 6px;
+    margin-right: 0.25rem;
+}
+
+.navbar-nav .nav-link:not(.btn):hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateY(-1px);
+}
+
 /* Cards */
 .card {
     border: none;
@@ -119,6 +169,52 @@ footer {
     .container {
         padding-left: 15px;
         padding-right: 15px;
+    }
+    
+    /* Mobile navigation button adjustments */
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .navbar-nav .nav-link.btn {
+        margin-left: 0.25rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .navbar-nav .nav-link i {
+        margin-right: 0.4rem;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Extra small devices */
+    .navbar-nav .nav-link {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .navbar-nav .nav-link.btn {
+        margin-left: 0.2rem;
+        padding: 0.6rem 0.8rem;
+    }
+    
+    .navbar-nav .nav-link i {
+        margin-right: 0.3rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (min-width: 992px) {
+    /* Large devices and up */
+    .navbar-nav .nav-link {
+        padding: 0.5rem 1.2rem;
+    }
+    
+    .navbar-nav .nav-link.btn {
+        margin-left: 0.75rem;
+        padding: 0.5rem 1.2rem;
     }
 }
 
