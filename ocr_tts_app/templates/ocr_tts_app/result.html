@@ -23,10 +23,14 @@
                         <p><strong>Learning Type:</strong> {{ session.get_learning_type_display }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>OCR Status:</strong> 
-                            <span class="badge bg-{% if session.ocr_status == 'completed' %}success{% elif session.ocr_status == 'failed' %}danger{% elif session.ocr_status == 'processing' %}warning{% else %}secondary{% endif %}">
-                                {{ session.get_ocr_status_display }}
-                            </span>
+                        <p><strong>OCR Status:</strong>
+                            {% if session.learning_type == 'text_input' %}
+                                <span class="badge bg-secondary">Not used</span>
+                            {% else %}
+                                <span class="badge bg-{% if session.ocr_status == 'completed' %}success{% elif session.ocr_status == 'failed' %}danger{% elif session.ocr_status == 'processing' %}warning{% else %}secondary{% endif %}">
+                                    {{ session.get_ocr_status_display }}
+                                </span>
+                            {% endif %}
                         </p>
                         <p><strong>TTS Status:</strong> 
                             <span class="badge bg-{% if session.tts_status == 'completed' %}success{% elif session.tts_status == 'failed' %}danger{% elif session.tts_status == 'processing' %}warning{% else %}secondary{% endif %}">
@@ -64,19 +68,33 @@
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-text-paragraph"></i>
-                    Extracted Text (OCR Results)
+                    {% if session.learning_type == 'image_ocr' %}
+                        Extracted Text (OCR Results)
+                    {% else %}
+                        Input Text (Text-to-Speech)
+                    {% endif %}
                 </h5>
             </div>
             <div class="card-body">
-                {% if session.ocr_status == 'completed' and session.extracted_text %}
+                {% if session.extracted_text %}
                     <div class="mb-3">
                         <label for="extractedText" class="form-label">
-                            <strong>Recognized Text:</strong>
+                            <strong>
+                                {% if session.learning_type == 'image_ocr' %}
+                                    Recognized Text:
+                                {% else %}
+                                    Provided Text:
+                                {% endif %}
+                            </strong>
                             <small class="text-muted">({{ session.word_count|default:0 }} words)</small>
                         </label>
                         <textarea id="extractedText" class="form-control" rows="6" readonly>{{ session.extracted_text }}</textarea>
                         <div class="form-text">
-                            ✅ Text successfully decoded from image using OCR
+                            {% if session.learning_type == 'image_ocr' %}
+                                ✅ Text successfully decoded from image using OCR
+                            {% else %}
+                                ✍️ Text provided directly for Text-to-Speech
+                            {% endif %}
                         </div>
                     </div>
                     <div class="d-flex gap-2">
@@ -87,29 +105,31 @@
                             <i class="bi bi-download"></i> Export Learning Note
                         </a>
                     </div>
-                {% elif session.ocr_status == 'processing' %}
+                {% elif session.learning_type == 'image_ocr' and session.ocr_status == 'processing' %}
                     <div class="text-center">
                         <div class="spinner-border text-warning" role="status">
                             <span class="visually-hidden">Processing...</span>
                         </div>
                         <p class="mt-2">OCR processing in progress...</p>
                     </div>
-                {% elif session.ocr_status == 'failed' %}
+                {% elif session.learning_type == 'image_ocr' and session.ocr_status == 'failed' %}
                     <div class="alert alert-danger">
                         <i class="bi bi-exclamation-triangle"></i>
                         <strong>OCR Processing Failed:</strong> {{ session.ocr_error }}
                     </div>
                 {% else %}
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        OCR processing has not started yet.
-                    </div>
+                    {% if session.learning_type == 'image_ocr' %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            OCR processing has not started yet.
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
 
         <!-- Dictionary Lookup Results -->
-        {% if session.is_single_word %}
+        {% if session.learning_type == 'image_ocr' and session.is_single_word %}
         <div class="card shadow-sm mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -212,6 +232,36 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- AI Tutor (RAG) Question Box -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0 d-flex align-items-center">
+                    <i class="bi bi-chat-dots me-2"></i>
+                    Ask the AI Tutor about this text
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    Ask a question about the recognized text, vocabulary, or grammar. The AI tutor will use this session,
+                    dictionary info, and your recent learning history to explain.
+                </p>
+                <div class="mb-2">
+                    <label for="ragQuestion" class="form-label"><strong>Your question</strong></label>
+                    <textarea id="ragQuestion" class="form-control" rows="3" placeholder="e.g. Can you explain the grammar in this sentence?"></textarea>
+                </div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <button id="ragAskButton" class="btn btn-outline-primary" type="button" onclick="askRagTutor()">
+                        <i class="bi bi-send"></i> Ask Tutor
+                    </button>
+                    <span id="ragStatus" class="small text-muted"></span>
+                </div>
+                <div id="ragAnswerContainer" class="mt-2" style="display: none;">
+                    <h6><i class="bi bi-lightbulb"></i> Tutor Explanation</h6>
+                    <div id="ragAnswer" class="p-3 bg-light rounded small" style="white-space: pre-wrap;"></div>
+                </div>
+            </div>
+        </div>
 
         <!-- TTS Results -->
         <div class="card shadow-sm mb-4">
@@ -405,5 +455,57 @@
         location.reload();
     }, 3000); // Refresh every 3 seconds
     {% endif %}
+
+    // RAG / AI Tutor integration
+    function askRagTutor() {
+        const questionInput = document.getElementById('ragQuestion');
+        const statusSpan = document.getElementById('ragStatus');
+        const answerContainer = document.getElementById('ragAnswerContainer');
+        const answerDiv = document.getElementById('ragAnswer');
+        const askButton = document.getElementById('ragAskButton');
+
+        if (!questionInput || !questionInput.value.trim()) {
+            alert('Please enter a question for the tutor.');
+            return;
+        }
+
+        const question = questionInput.value.trim();
+        statusSpan.textContent = 'Thinking...';
+        answerContainer.style.display = 'none';
+        answerDiv.textContent = '';
+        askButton.disabled = true;
+
+        fetch("{% url 'api_rag_explain' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                question: question,
+                session_id: "{{ session.session_id }}"
+            })
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(result => {
+            askButton.disabled = false;
+            if (!result.ok) {
+                const msg = result.data && result.data.error ? result.data.error : 'RAG explanation failed.';
+                statusSpan.textContent = '';
+                alert(msg);
+                return;
+            }
+
+            const answer = result.data.answer || 'No answer returned.';
+            answerDiv.textContent = answer;
+            answerContainer.style.display = 'block';
+            statusSpan.textContent = 'Done.';
+        })
+        .catch(error => {
+            console.error('RAG request failed:', error);
+            statusSpan.textContent = '';
+            askButton.disabled = false;
+            alert('Failed to contact AI tutor. Please try again later.');
+        });
+    }
 </script>
 {% endblock %}

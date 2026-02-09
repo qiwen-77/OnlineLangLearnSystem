@@ -1,22 +1,22 @@
 {% extends 'ocr_tts_app/base.html' %}
 {% load static %}
 
-{% block title %}Upload Image - {{ block.super }}{% endblock %}
+{% block title %}OCR - {{ block.super }}{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <!-- Upload Form Card -->
+        <!-- OCR Form Card -->
         <div class="card shadow-sm">
             <div class="card-header text-white" style="background: var(--gradient-primary);">
                 <h3 class="card-title mb-0">
-                    <i class="bi bi-cloud-upload"></i>
-                    Upload Image for OCR Processing
+                    <i class="bi bi-eyeglasses"></i>
+                    OCR (Extract Text from Image)
                 </h3>
             </div>
             <div class="card-body">
                 <p class="text-muted mb-4">
-                    Upload an image containing text (handwriting or printed text) to extract and convert to speech.
+                    Upload an image containing text (handwriting or printed text) to extract the text using OCR and then convert to speech.
                 </p>
                 
                 <form method="post" enctype="multipart/form-data" action="{% url 'upload' %}">
@@ -49,8 +49,8 @@
                     
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-lg" style="background: var(--gradient-primary); color: white; border: none;">
-                            <i class="bi bi-upload"></i>
-                            Upload & Process Image
+                            <i class="bi bi-search"></i>
+                            Start OCR
                         </button>
                     </div>
                 </form>
@@ -63,10 +63,6 @@
                         <li><strong>TTS:</strong> Convert extracted text to speech audio</li>
                         <li><strong>Result:</strong> View text and play/download audio</li>
                     </ol>
-                    <p class="mt-2 mb-0 text-success">
-                        <i class="bi bi-check-circle"></i>
-                        <small><strong>Ready:</strong> Your fine-tuned TrOCR model (IIIT5K Word dataset) is integrated and ready for enhanced text recognition!</small>
-                    </p>
                 </div>
             </div>
         </div>
@@ -114,7 +110,7 @@
                     <div class="text-primary" style="font-size: 2rem;">
                         <i class="bi bi-image"></i>
                     </div>
-                    <h6 class="card-title mt-2">Image OCR</h6>
+                    <h6 class="card-title mt-2">OCR</h6>
                     <p class="card-text small">Extract text from images using advanced OCR technology.</p>
                     <div class="d-grid">
                         <span class="btn btn-sm" style="background: var(--gradient-primary); color: white; border: none; cursor: default;">Current Page</span>

@@ -10,6 +10,9 @@ from django.views import View
 from django.core.files.storage import default_storage
 from django.db.models import Count, Q
 from datetime import datetime, timedelta
+from django.utils import timezone
+import json
+from django.utils.safestring import mark_safe
 import os
 import sys
 import time
@@ -45,6 +48,12 @@ except ImportError as e:
     logger.error(f"❌ Failed to import OCR pipeline: {e}")
     get_ocr_pipeline = None
 
+"""
+Service imports (TTS, Translation, RAG)
+These are loaded with graceful fallbacks so core OCR/TTS/Translation features
+continue to work even if optional services are unavailable.
+"""
+
 # Import services
 sys.path.append(os.path.join(settings.BASE_DIR, 'services'))
 try:
@@ -61,6 +70,15 @@ except ImportError as e:
         logger.error(f"Failed to import fallback modules: {e2}")
         get_tts_service = None
         get_translation_service = None
+
+# Import RAG service (optional, non-fatal if unavailable)
+try:
+    from rag_service import get_rag_service
+    RAG_AVAILABLE = True
+    logger.info("✅ RAG service imported in views")
+except ImportError as e:
+    logger.warning(f"⚠️ RAG service not available in views: {e}")
+    RAG_AVAILABLE = False
 
 class HomeView(View):
     """Home page - public landing page"""
@@ -98,7 +116,7 @@ class DashboardView(LoginRequiredMixin, View):
         favorite_sessions = sessions.filter(is_favorited=True)
         
         # Recent activity (last 7 days)
-        week_ago = datetime.now() - timedelta(days=7)
+        week_ago = timezone.now() - timedelta(days=7)
         recent_sessions = sessions.filter(created_at__gte=week_ago)
         
         # Group sessions by learning type
@@ -135,50 +153,49 @@ class DashboardView(LoginRequiredMixin, View):
         return render(request, 'ocr_tts_app/dashboard.html', context)
     
     def _get_chart_data(self, user, sessions):
-        """Generate chart data for the last 7 days"""
-        from datetime import datetime, timedelta
-        
+        """Generate chart data for the last 7 days (timezone-aware)"""
         # Initialize data arrays
+        labels = []
         ocr_data = []              # image_ocr
         tts_data = []              # text_input (direct TTS)
-        translation_data = []      # practice (used here as translation proxy)
-        
-        # Get last 7 days of data (in reverse order for chronological display)
+
+        # Use local date for the user's timezone
+        today_local = timezone.localdate()
+
+        # Build last 7 days labels and counts (chronological)
         for i in range(6, -1, -1):  # 6, 5, 4, 3, 2, 1, 0
-            date = datetime.now() - timedelta(days=i)
-            day_sessions = sessions.filter(created_at__date=date.date())
-            
+            day = today_local - timedelta(days=i)
+            labels.append(day.strftime('%d/%m'))
+            day_sessions = sessions.filter(created_at__date=day)
+
             ocr_count = day_sessions.filter(learning_type='image_ocr').count()
             tts_count = day_sessions.filter(learning_type='text_input').count()
-            translation_count = day_sessions.filter(learning_type='practice').count()
-            
             ocr_data.append(ocr_count)
             tts_data.append(tts_count)
-            translation_data.append(translation_count)
-        
-        # Convert to comma-separated strings for JavaScript
+
+        # Prepare JS-friendly JSON arrays
         return {
-            'ocr_sessions': ','.join(map(str, ocr_data)),
-            'tts_sessions': ','.join(map(str, tts_data)),
-            'translation_sessions': ','.join(map(str, translation_data))
+            'labels': mark_safe(json.dumps(labels)),
+            'ocr_sessions': mark_safe(json.dumps(ocr_data)),
+            'tts_sessions': mark_safe(json.dumps(tts_data))
         }
     
     def _get_feature_usage(self, sessions):
-        """Calculate feature usage percentages"""
+        """Calculate feature usage percentages (OCR, TTS, Dictionary). Translation removed."""
         if not sessions.exists():
-            return {'ocr': 45, 'tts': 30, 'translation': 15, 'dictionary': 10}
+            return {'ocr': 0, 'tts': 0, 'dictionary': 0}
         
         total = sessions.count()
         ocr_count = sessions.filter(learning_type='image_ocr').count()
         tts_count = sessions.filter(learning_type='text_input').count()
-        translation_count = sessions.filter(learning_type='practice').count()
         dictionary_count = sessions.filter(is_single_word=True).count()
         
+        # Normalize to percentages (exclude translation from distribution)
+        denom = total if total > 0 else 1
         return {
-            'ocr': round((ocr_count / total) * 100) if total > 0 else 0,
-            'tts': round((tts_count / total) * 100) if total > 0 else 0,
-            'translation': round((translation_count / total) * 100) if total > 0 else 0,
-            'dictionary': round((dictionary_count / total) * 100) if total > 0 else 0,
+            'ocr': round((ocr_count / denom) * 100),
+            'tts': round((tts_count / denom) * 100),
+            'dictionary': round((dictionary_count / denom) * 100),
         }
 
 class UploadView(LoginRequiredMixin, View):
@@ -192,7 +209,7 @@ class UploadView(LoginRequiredMixin, View):
             ocr_status='completed'
         ).order_by('-created_at')[:5]
         
-        return render(request, 'ocr_tts_app/upload.html', {
+        return render(request, 'ocr_tts_app/ocr_upload.html', {
             'form': form,
             'recent_sessions': recent_sessions
         })
@@ -208,7 +225,7 @@ class UploadImageView(LoginRequiredMixin, View):
                 # Check if image file was uploaded
                 if 'uploaded_image' not in request.FILES:
                     messages.error(request, "Please select an image file to upload.")
-                    return render(request, 'ocr_tts_app/upload.html', {'form': form})
+                    return render(request, 'ocr_tts_app/ocr_upload.html', {'form': form})
                 
                 # Create new session associated with user
                 session = LearningHistory.objects.create(
@@ -265,9 +282,24 @@ class UploadImageView(LoginRequiredMixin, View):
                     session.word_count = len(extracted_text.split()) if extracted_text else 0
                     session.processing_time_ocr = round(time.time() - start_ocr, 3)
                     session.save()
-                    
+
                     logger.info(f"✅ OCR completed in {session.processing_time_ocr}s. Extracted {len(extracted_text)} characters")
-                    
+
+                    # Index session for RAG (non-blocking best-effort)
+                    if RAG_AVAILABLE:
+                        try:
+                            rag_service = get_rag_service()
+                            rag_service.index_learning_session(
+                                session_id=session.id,
+                                user=request.user,
+                                extracted_text=session.extracted_text,
+                                word_definitions=session.word_definitions,
+                                is_single_word=session.is_single_word,
+                            )
+                            logger.info("🧠 Session indexed for RAG (session_id=%s)", session.session_id)
+                        except Exception as rag_err:
+                            logger.warning("⚠️ RAG indexing failed for session %s: %s", session.session_id, rag_err)
+
                     # Log dictionary results if available
                     if session.is_single_word and session.word_definitions:
                         logger.info(f"📚 Dictionary lookup found {len(session.word_definitions)} definitions for '{extracted_text}'")
@@ -347,7 +379,7 @@ class UploadImageView(LoginRequiredMixin, View):
             ocr_status='completed'
         ).order_by('-created_at')[:5]
         
-        return render(request, 'ocr_tts_app/upload.html', {
+        return render(request, 'ocr_tts_app/ocr_upload.html', {
             'form': form,
             'recent_sessions': recent_sessions
         })
@@ -501,7 +533,22 @@ class TextToSpeechView(LoginRequiredMixin, View):
                 session.ocr_status = 'completed'  # Skip OCR since we have text
                 session.word_count = len(session.extracted_text.split())
                 session.save()
-                
+
+                # Index session for RAG (non-blocking best-effort)
+                if RAG_AVAILABLE:
+                    try:
+                        rag_service = get_rag_service()
+                        rag_service.index_learning_session(
+                            session_id=session.id,
+                            user=request.user,
+                            extracted_text=session.extracted_text,
+                            word_definitions=session.word_definitions if hasattr(session, "word_definitions") else None,
+                            is_single_word=getattr(session, "is_single_word", False),
+                        )
+                        logger.info("🧠 Text-input session indexed for RAG (session_id=%s)", session.session_id)
+                    except Exception as rag_err:
+                        logger.warning("⚠️ RAG indexing failed for text-input session %s: %s", session.session_id, rag_err)
+
                 # Update user profile statistics
                 profile = request.user.profile
                 profile.total_sessions += 1
@@ -727,6 +774,48 @@ class ApiDictionaryView(View):
         except Exception as e:
             logger.exception("/api/dictionary error")
             return JsonResponse({'error': f'Dictionary lookup failed: {str(e)}'}, status=500)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ApiRAGExplainView(LoginRequiredMixin, View):
+    """
+    POST /api/rag/explain/
+    Payload: { "question": str, "session_id": str (optional) }
+    Response: { "answer": str, "sources": [...]} or error
+    """
+
+    def post(self, request):
+        if not RAG_AVAILABLE:
+            return JsonResponse({'error': 'RAG service not available'}, status=503)
+
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            question = (payload.get('question') or '').strip()
+            session_id = payload.get('session_id')
+
+            if not question:
+                return JsonResponse({'error': 'Question is required'}, status=400)
+
+            rag_service = get_rag_service()
+
+            answer, sources = rag_service.answer_question(
+                user=request.user,
+                question=question,
+                session_id=session_id,
+            )
+
+            return JsonResponse(
+                {
+                    'answer': answer,
+                    'sources': sources,
+                }
+            )
+        except ValueError as e:
+            logger.warning(f"/api/rag/explain validation error: {e}")
+            return JsonResponse({'error': str(e)}, status=400)
+        except Exception as e:
+            logger.exception("/api/rag/explain error")
+            return JsonResponse({'error': f'RAG explanation failed: {str(e)}'}, status=500)
 
 class ExportLearningNoteView(LoginRequiredMixin, View):
     """Export learning session as a formatted text file"""
