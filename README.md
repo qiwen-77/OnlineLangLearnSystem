@@ -16,15 +16,7 @@ A comprehensive Django web application for language learning powered by **OCR (O
 - **Voice Options**: Male/female voice selection with CMU Arctic speaker embeddings
 - **Multilingual Translation**: English ↔ Chinese ↔ Malay using M2M100 model
 - **Dictionary Lookup**: Automatic word definitions with Free Dictionary API + NLTK WordNet fallback
-- **AI Tutor (RAG)**: Ask natural-language questions about extracted text and get contextual explanations using embeddings, FAISS vector search, and a local LLM
-- **Audio Quality**: Fixed 0.5x speed for optimal clarity and volume enhancement
-### 🧠 AI-Powered Learning
-- **Smart OCR**: Extract text from handwritten or printed images using custom-trained TrOCR models
-- **High-Quality TTS**: Convert text to speech with SpeechT5 + HiFi-GAN vocoder
-- **Voice Options**: Male/female voice selection with CMU Arctic speaker embeddings
-- **Multilingual Translation**: English ↔ Chinese ↔ Malay using M2M100 model
-- **Dictionary Lookup**: Automatic word definitions with Free Dictionary API + NLTK WordNet fallback
-- **AI Tutor (RAG)**: Ask natural-language questions about extracted text and get contextual explanations using embeddings, FAISS vector search, and a local LLM
+- **AI Tutor (RAG)**: Ask questions about words and grammar; word-level explanations use a rule-based tutor; RAG (FAISS + local LLM) supports contextual Q&A (best for single-word grammar questions)
 - **Audio Quality**: Fixed 0.5x speed for optimal clarity and volume enhancement
 
 ### 📊 Learning Management
@@ -132,32 +124,70 @@ A comprehensive Django web application for language learning powered by **OCR (O
 
 ```
 OnlineLangLearnSystem/
-├── language_app/          # Main Django project
-│   ├── settings.py       # Project settings (SQLite database)
-│   ├── urls.py          # Main URL configuration
-│   └── ...
-├── accounts/             # User authentication app
-│   ├── models.py        # User and UserProfile models
-│   ├── views.py         # Registration, login, profile views
-│   ├── forms.py         # Custom forms with validation
-│   └── signals.py       # Auto-create UserProfile on registration
-├── ocr_tts_app/          # Main application
-│   ├── models.py        # LearningHistory, Statistics models
-│   ├── views.py         # OCR, TTS, translation, export views
-│   ├── urls.py          # App URL patterns
-│   └── templates/       # HTML templates with Bootstrap 5
-├── src/                  # Core AI services
-│   └── ocr_pipeline.py  # TrOCR model loading and text extraction
-├── services/             # External service integrations
-│   ├── tts_service.py   # SpeechT5 TTS with voice options
-│   ├── translation_service.py  # M2M100 translation pipeline
-│   └── dictionary_service.py   # Dictionary lookup with caching
-├── static/               # CSS, JS, images
-├── media/                # User uploads and generated files
-│   ├── uploads/         # Uploaded images
-│   └── tts/             # Generated audio files
-├── requirements.txt      # Python dependencies
-└── README.md            # This file
+├── manage.py                 # Django management script
+├── requirements.txt          # Python dependencies
+├── README.md                 # This file
+├── .gitignore
+│
+├── language_app/              # Main Django project
+│   ├── __init__.py
+│   ├── settings.py            # Project settings (SQLite, static, media, etc.)
+│   ├── urls.py                # Root URL configuration
+│   ├── asgi.py
+│   └── wsgi.py
+│
+├── accounts/                  # User authentication app
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py               # Custom registration, login, profile forms
+│   ├── models.py              # (Uses Django User; profile in ocr_tts_app)
+│   ├── signals.py             # Auto-create UserProfile on registration
+│   ├── urls.py                # Auth URL patterns (/auth/login/, etc.)
+│   ├── views.py               # Registration, login, logout, profile, password reset
+│   ├── tests.py
+│   ├── migrations/
+│   └── templates/accounts/    # login, register, profile, password_reset*.html
+│
+├── ocr_tts_app/              # Main learning application
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── models.py              # LearningHistory, LearningStatistics, UserProfile
+│   ├── urls.py                # Dashboard, upload, TTS, translation, sessions, APIs
+│   ├── views.py               # OCR, TTS, translation, RAG explain, export views
+│   ├── tests.py
+│   ├── migrations/
+│   └── templates/ocr_tts_app/ # base, home, dashboard, ocr_upload, result,
+│                              # session_list, text_to_speech, translation
+│
+├── src/                      # Core AI / ML pipelines
+│   ├── __init__.py
+│   ├── config.py
+│   ├── ocr_pipeline.py        # TrOCR model loading and text extraction
+│   ├── translate.py           # Translation helpers
+│   ├── tts/                   # TTS pipeline implementation
+│   │   ├── __init__.py
+│   │   ├── tts_pipeline.py
+│   │   ├── tts_multilang.py
+│   │   └── tts.py
+│
+├── services/                  # Django-facing service integrations
+│   ├── __init__.py
+│   ├── tts_service.py         # SpeechT5 TTS with voice options
+│   ├── translation_service.py # M2M100 translation pipeline
+│   ├── dictionary_service.py # Free Dictionary API + NLTK WordNet fallback
+│   └── rag_service.py        # RAG (FAISS + LLM) and rule-based AI tutor
+│
+├── static/                   # Static assets
+│   ├── css/style.css
+│   └── favicon.svg
+│
+└── media/                    # Runtime: user uploads and generated files
+    ├── uploads/               # Uploaded images
+    ├── tts/                   # Generated audio files
+    └── rag_index/             # FAISS index and metadata for RAG
 ```
 
 ## 🔧 Configuration
@@ -193,6 +223,12 @@ The system includes fully integrated AI models:
    - Free Dictionary API (online)
    - NLTK WordNet (offline fallback)
    - LRU caching for performance
+
+5. **RAG / AI Tutor** (`services/rag_service.py`):
+   - FAISS vector store over session text and dictionary context
+   - HuggingFace embeddings + optional local LLM (e.g. gpt2)
+   - Rule-based word-grammar explanations for single-word questions
+   - Configurable via `RAG_EMBEDDING_MODEL` and `RAG_LLM_MODEL` environment variables
 
 ## 🎨 User Interface
 
